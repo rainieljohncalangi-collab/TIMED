@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Students & Scores - TestSync</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f0f2f5;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+      min-height: 100vh;
+      background-color: maroon;
+      color: white;
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 0.02em;
+      padding: 0 16px 22px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      margin-bottom: 20px;
+    }
+
+    .sidebar-logo {
+      display: block;
+      width: 48px;
+      height: 48px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+      object-fit: contain;
+    }
+
+    .sidebar a,
+    .dropdown-btn {
+      display: block;
+      color: #bdc3c7;
+      padding: 15px 25px;
+      text-decoration: none;
+      font-size: 16px;
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active,
+    .dropdown-btn:hover {
+      background-color: #600000;
+      color: white;
+    }
+
+    .dropdown-container {
+      display: none;
+      background-color: #4a0000;
+      padding-left: 15px;
+    }
+
+    .dropdown-container a {
+      padding: 12px 25px;
+      font-size: 14px;
+    }
+
+    .main-container {
+      flex: 1;
+      position: relative;
+      padding: 44px 32px 32px;
+      background-color: #f0f2f5;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)),
+        url("pantay-school-logo-transparent.png");
+      background-position: center, center;
+      background-size: 100% 100%, auto 100%;
+      background-repeat: no-repeat;
+      overflow-y: auto;
+    }
+
+    .main-container::before {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 12px;
+      background: maroon;
+      content: '';
+    }
+
+    .page-header {
+      font-size: 28px;
+      font-weight: 700;
+      color: #2f2f2f;
+      margin-bottom: 18px;
+    }
+
+    .panel {
+      background: transparent;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
+      margin-bottom: 24px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .panel-header h2 {
+      font-size: 20px;
+      color: maroon;
+    }
+
+    .panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-refresh {
+      background-color: maroon;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn-refresh:hover {
+      background-color: #701215;
+    }
+
+    .sync-hint {
+      font-size: 13px;
+      color: #7f8c8d;
+    }
+
+    .section-groups {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .folder {
+      border: 1px solid #e9e9e9;
+      border-radius: 12px;
+      background: transparent;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+    }
+
+    .folder-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 16px 18px;
+      background: transparent;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+
+    .folder-header:hover {
+      background: rgba(241, 233, 235, 0.55);
+    }
+
+    .folder-icon {
+      font-size: 22px;
+      color: maroon;
+    }
+
+    .folder-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #333;
+      flex: 1;
+    }
+
+    .folder-section {
+      font-size: 13px;
+      color: #7f8c8d;
+    }
+
+    .folder-count {
+      background: maroon;
+      color: white;
+      border-radius: 18px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .folder-body {
+      display: none;
+      padding: 16px;
+      background: transparent;
+    }
+
+    .folder-body.open {
+      display: block;
+    }
+
+    .scores-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .scores-table th,
+    .scores-table td {
+      border: 1px solid #e7e7e7;
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .scores-table th {
+      background-color: #f9f1f2;
+      color: maroon;
+      font-weight: 700;
+    }
+
+    .scores-empty {
+      text-align: center;
+      color: #7f8c8d;
+      padding: 18px;
+    }
+
+    /* ====== RESPONSIVE DESIGN FOR MOBILE DEVICES ====== */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        width: 100%;
+        min-height: 0;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px 15px;
+        align-items: center;
+        gap: 5px;
+        flex-shrink: 0;
+      }
+
+      .sidebar-title {
+        justify-content: flex-start;
+        flex: 1 0 100%;
+        font-size: 22px;
+        padding: 0 0 10px;
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+
+      .sidebar-logo { width: 44px; height: 44px; }
+
+      .sidebar a,
+      .dropdown-btn {
+        padding: 12px 14px;
+        font-size: 14px;
+        width: auto;
+      }
+
+      .dropdown-container {
+        width: 100%;
+      }
+
+      .dropdown-container a {
+        padding: 10px 20px;
+        font-size: 14px;
+      }
+
+      .main-container {
+        padding: 28px 16px 16px;
+      }
+
+      .page-header {
+        font-size: 22px;
+        margin-bottom: 14px;
+      }
+
+      .panel {
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
+
+      .scores-table th,
+      .scores-table td {
+        padding: 10px 8px;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .scores-table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sidebar a,
+      .dropdown-btn {
+        padding: 10px 8px;
+        font-size: 12px;
+      }
+
+      .sidebar-title {
+        font-size: 20px;
+      }
+
+      .sidebar-logo { width: 40px; height: 40px; }
+
+      .page-header {
+        font-size: 18px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+
+  <div class="sidebar">
+    <div class="sidebar-title">
+      <img class="sidebar-logo" src="testSync-brand-mark.png" alt="">
+      <span>TestSync</span>
+    </div>
+    <a href="dashboard.html">Home</a>
+    <a href="quizzes.html">Quizzes</a>
+    <a href="students.html" class="active">Students & Scores</a>
+    <a href="/omr-sheet" target="_blank" rel="noopener">Print OMR Sheet</a>
+
+    <button class="dropdown-btn" id="accountButton" type="button" aria-expanded="false">Account ▾</button>
+    <div class="dropdown-container" id="accountDropdown">
+      <a href="profile.html">Profile Settings</a>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="page-header">Students & Scores</div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Scanned Scores</h2>
+        <div class="panel-actions">
+          <span class="sync-hint" id="syncHint">Auto-loading from server…</span>
+          <button class="btn-refresh" id="refreshBtn">↻ Refresh</button>
+        </div>
+      </div>
+
+      <div id="sectionGroups" class="section-groups">
+        <div class="scores-empty">No scanned scores yet. Sync scores from the app or scan an answer sheet.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script>
+    const currentUserData = localStorage.getItem('currentScanCheckUser');
+    if (!currentUserData) {
+      window.location.href = 'log.html';
+    }
+
+    // Account dropdown toggle (same pattern as dashboard & quizzes)
+    const accountButton = document.getElementById('accountButton');
+    const accountDropdown = document.getElementById('accountDropdown');
+
+    accountButton.addEventListener('click', () => {
+      const isOpen = accountDropdown.style.display === 'block';
+      accountDropdown.style.display = isOpen ? 'none' : 'block';
+      accountButton.setAttribute('aria-expanded', String(!isOpen));
+    });
+
+    const sectionGroups = document.getElementById('sectionGroups');
+    const syncHint = document.getElementById('syncHint');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    // Map quizId to quiz titles from the server so the table reads nicely.
+    let quizTitles = {};
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    async function loadQuizzes() {
+      try {
+        const resp = await fetch(scanCheckApiUrl('/api/quizzes'), { cache: 'no-store' });
+        if (!resp.ok) return;
+        const quizzes = await resp.json();
+        quizTitles = {};
+        quizzes.forEach(q => { quizTitles[q._id] = q.title; });
+      } catch (e) {
+        console.error('Unable to load quizzes for title mapping:', e);
+      }
+    }
+
+    function renderGroups(scores) {
+      sectionGroups.innerHTML = '';
+
+      if (!scores || scores.length === 0) {
+        sectionGroups.innerHTML = '<div class="scores-empty">No scanned scores yet. Sync scores from the app or scan an answer sheet.</div>';
+        return;
+      }
+
+      const grouped = new Map();
+      scores.forEach((entry) => {
+        // Each subject/quiz gets its own folder on Students & Scores.
+        const key = entry.quizId || 'No Subject';
+        if (!grouped.has(key)) {
+          grouped.set(key, {
+            subject: quizTitles[entry.quizId] || entry.quizId || 'No Subject',
+            sections: new Set(),
+            entries: []
+          });
+        }
+        if (entry.section) grouped.get(key).sections.add(entry.section);
+        grouped.get(key).entries.push(entry);
+      });
+
+      const folders = Array.from(grouped.values());
+      folders.forEach((folder) => {
+        const folderEl = document.createElement('div');
+        folderEl.className = 'folder';
+
+        const rows = folder.entries.map((entry) => {
+          const quizTitle = quizTitles[entry.quizId] || (entry.quizId ? entry.quizId : '—');
+          const date = entry.createdAt
+            ? new Date(entry.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+              })
+            : '—';
+
+          return `
+            <tr>
+              <td><strong>${escapeHtml(entry.studentName || '—')}</strong></td>
+              <td><strong>${entry.score} / ${entry.totalItems}</strong></td>
+              <td>${escapeHtml(quizTitle)}</td>
+              <td>${date}</td>
+            </tr>
+          `;
+        }).join('');
+
+        const sections = Array.from(folder.sections).join(', ') || 'No Section';
+        folderEl.innerHTML = `
+          <div class="folder-header">
+            <span class="folder-icon">📁</span>
+            <span class="folder-name">${escapeHtml(folder.subject)}</span>
+            <span class="folder-section">Section: ${escapeHtml(sections)}</span>
+            <span class="folder-count">${folder.entries.length} score(s)</span>
+          </div>
+          <div class="folder-body open">
+            <table class="scores-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Score</th>
+                  <th>Quiz</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        `;
+
+        folderEl.querySelector('.folder-header').addEventListener('click', () => {
+          const body = folderEl.querySelector('.folder-body');
+          body.classList.toggle('open');
+        });
+
+        sectionGroups.appendChild(folderEl);
+      });
+    }
+
+    let scoresRequest = null;
+    function loadScores() {
+      if (scoresRequest) return scoresRequest;
+      syncHint.textContent = 'Loading…';
+      scoresRequest = fetch(scanCheckApiUrl('/api/scores'), { cache: 'no-store' })
+        .then(async (resp) => {
+          if (!resp.ok) {
+            const body = await resp.json().catch(() => ({}));
+            throw new Error(body.message || 'Server error');
+          }
+          return resp.json();
+        })
+        .then((scores) => {
+          syncHint.textContent = `${scores.length} record(s) loaded from server`;
+          renderGroups(scores);
+        })
+        .catch((err) => {
+          syncHint.textContent = 'Cannot connect to server';
+          sectionGroups.innerHTML = `<div class="scores-empty">Unable to connect to the server (${err.message}). Start the server and MongoDB, then refresh the page.</div>`;
+        })
+        .finally(() => { scoresRequest = null; });
+    }
+
+    refreshBtn.addEventListener('click', () => {
+      loadQuizzes();
+      loadScores();
+    });
+
+    // Refresh quickly so newly synced scores appear within about a second.
+    loadQuizzes();
+    loadScores();
+    setInterval(loadScores, 1000);
+  </script>
+</body>
+</html>

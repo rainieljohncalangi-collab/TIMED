@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quizzes - TestSync</title>
+  <style>
+    :root {
+      --primary-maroon: maroon;
+      --hover-maroon: #600000;
+      --border-color: #8e8e8e;
+      --text-gray: #5f6368;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #f0f2f5;
+    }
+
+    /* --- SIDEBAR --- */
+    .sidebar {
+      width: 250px;
+      min-height: 100vh;
+      background-color: var(--primary-maroon);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 0.02em;
+      padding: 0 16px 22px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      margin-bottom: 20px;
+    }
+
+    .sidebar-logo {
+      width: 48px;
+      height: 48px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+      object-fit: contain;
+    }
+
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .nav-item {
+      padding: 15px 25px;
+      color: #bdc3c7;
+      text-decoration: none;
+      font-size: 16px;
+      display: block;
+      transition: background 0.2s;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background-color: var(--hover-maroon);
+      color: #ffffff;
+    }
+
+    .dropdown-btn {
+      display: block;
+      width: 100%;
+      padding: 15px 25px;
+      border: 0;
+      background: none;
+      color: #bdc3c7;
+      font: inherit;
+      font-size: 16px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .dropdown-btn:hover {
+      background-color: var(--hover-maroon);
+      color: #ffffff;
+    }
+
+    .dropdown-container {
+      display: none;
+      background-color: #4a0000;
+      padding-left: 15px;
+    }
+
+    .dropdown-container .nav-item {
+      padding: 12px 25px;
+      font-size: 14px;
+    }
+
+    /* --- MAIN CONTENT AREA --- */
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-y: auto;
+      padding-top: 12px;
+      background-color: #f0f2f5;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)),
+        url("pantay-school-logo-transparent.png");
+      background-position: center, center;
+      background-size: 100% 100%, auto 100%;
+      background-repeat: no-repeat;
+    }
+
+    .main-content::before {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 12px;
+      background: var(--primary-maroon);
+      content: '';
+    }
+
+    /* Controls Container (Sort & Search) */
+    .controls-container {
+      display: flex;
+      gap: 12px;
+      padding: 20px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .controls-container fieldset {
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 0 8px;
+      margin: 0;
+      flex: 1;
+      max-width: 180px;
+      height: 48px;
+    }
+
+    .controls-container legend {
+      font-size: 12px;
+      color: var(--text-gray);
+      padding: 0 4px;
+    }
+
+    .controls-container select {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 16px;
+      color: #202124;
+      cursor: pointer;
+    }
+
+    .controls-container input[type="text"] {
+      flex: 1;
+      height: 48px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 0 16px;
+      font-size: 16px;
+      outline: none;
+      background: transparent;
+      min-width: 200px;
+    }
+
+    .controls-container input[type="text"]::placeholder {
+      color: var(--text-gray);
+    }
+
+    .controls-container input[type="text"]:focus,
+    .controls-container fieldset:focus-within {
+      border-color: var(--primary-maroon);
+    }
+
+    /* Quiz List Panel */
+    .quiz-list-panel {
+      margin: 0 20px 20px;
+      background: transparent;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+    }
+
+    .quiz-list-panel h2 {
+      font-size: 20px;
+      color: var(--primary-maroon);
+      margin-bottom: 16px;
+    }
+
+    .quiz-list-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    .quiz-list-table th,
+    .quiz-list-table td {
+      border: 1px solid #e5e5e5;
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .quiz-list-table th {
+      background-color: #f4e6e7;
+      color: var(--primary-maroon);
+      font-weight: 700;
+    }
+
+    .quiz-list-table td {
+      color: #333;
+    }
+
+    .quiz-list-empty {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+      font-size: 15px;
+    }
+
+    .btn-delete-quiz {
+      background: none;
+      border: 1px solid #e74c3c;
+      color: #e74c3c;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-delete-quiz:hover {
+      background-color: #e74c3c;
+      color: #fff;
+    }
+
+    .quiz-result-count {
+      font-size: 13px;
+      color: var(--text-gray);
+      margin-top: 8px;
+    }
+
+    /* Student Scores Table */
+    .scores-panel {
+      margin: 20px;
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+    }
+
+    .scores-panel h2 {
+      font-size: 20px;
+      color: var(--primary-maroon);
+      margin-bottom: 16px;
+    }
+
+    .scores-panel form {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .scores-panel input {
+      width: 100%;
+      height: 44px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .scores-panel button {
+      grid-column: span 4;
+      height: 44px;
+      border: none;
+      border-radius: 8px;
+      background-color: var(--primary-maroon);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .scores-panel button:hover {
+      background-color: var(--hover-maroon);
+    }
+
+    .scores-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    .scores-table th,
+    .scores-table td {
+      border: 1px solid #e5e5e5;
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .scores-table th {
+      background-color: #f4e6e7;
+      color: var(--primary-maroon);
+      font-weight: 700;
+    }
+
+    /* Floating Action Button (+ NEW QUIZ) */
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 30;
+      background-color: var(--primary-maroon);
+      color: #ffffff;
+      border: none;
+      border-radius: 28px;
+      padding: 14px 24px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .fab:hover {
+      background-color: var(--hover-maroon);
+    }
+
+    .fab span {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    /* --- COMMON MODAL OVERLAY STYLES --- */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    /* --- NEW QUIZ MODAL --- */
+    .modal-card {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 440px;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+    }
+
+    .modal-header {
+      padding: 16px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      color: #202124;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .form-control {
+      width: 100%;
+      height: 48px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 0 12px;
+      font-size: 15px;
+      outline: none;
+      background-color: #ffffff;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary-maroon);
+    }
+
+    .answer-key-section {
+      border-top: 1px solid #e0e0e0;
+      padding-top: 16px;
+    }
+
+.answer-key-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #202124;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .answer-type-inputs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .answer-type-order {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .answer-type-input {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .answer-type-input label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-gray);
+    }
+
+    .answer-type-input .form-control {
+      height: 44px;
+    }
+
+    .answer-group-header {
+      grid-column: 1 / -1;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary-maroon);
+      background: #f4e6e7;
+      padding: 6px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+
+    .answer-key-help {
+      color: var(--text-gray);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .answer-key-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .answer-key-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #444;
+    }
+
+    .answer-key-item > span {
+      width: 28px;
+      font-weight: 700;
+    }
+
+    .answer-options {
+      display: flex;
+      gap: 4px;
+    }
+
+    .answer-option {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #a8a8a8;
+      border-radius: 50%;
+      background: #fff;
+      color: #444;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .answer-option:hover {
+      border-color: var(--primary-maroon);
+    }
+
+    .answer-option.selected {
+      background: var(--primary-maroon);
+      border-color: var(--primary-maroon);
+      color: #fff;
+    }
+
+    .folder-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .folder-btn {
+      height: 48px;
+      width: 48px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .folder-btn:hover {
+      background-color: #f5f5f5;
+    }
+
+    .section-label {
+      font-size: 14px;
+      color: var(--text-gray);
+    }
+
+    .tags-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .add-tags-btn {
+      background: none;
+      border: none;
+      color: var(--primary-maroon);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .modal-footer {
+      display: flex;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .modal-btn {
+      flex: 1;
+      height: 52px;
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-cancel {
+      color: var(--text-gray);
+      border-right: 1px solid #e0e0e0;
+    }
+
+    .btn-cancel:hover {
+      background-color: #f5f5f5;
+    }
+
+    .btn-save {
+      color: var(--primary-maroon);
+    }
+
+    .btn-save:hover {
+      background-color: #fff0f1;
+    }
+
+    /* --- CREATE OR SELECT TAG MODAL --- */
+    .tag-modal-card {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 380px;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .tag-modal-title {
+      font-size: 22px;
+      font-weight: 500;
+      color: #5f6368;
+      text-align: center;
+    }
+
+    .tag-modal-input {
+      width: 100%;
+      height: 48px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 0 12px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .tag-modal-input:focus {
+      border-color: var(--primary-maroon);
+    }
+
+    .tag-modal-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .tag-btn {
+      flex: 1;
+      height: 40px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background-color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: background 0.2s;
+    }
+
+    .tag-btn-cancel {
+      color: var(--primary-maroon);
+      border-color: #e0e0e0;
+    }
+
+    .tag-btn-cancel:hover {
+      background-color: #fff0f1;
+    }
+
+    .tag-btn-create {
+      color: var(--primary-maroon);
+      border-color: #e0e0e0;
+    }
+
+    .tag-btn-create:hover {
+      background-color: #fff0f1;
+    }
+
+    /* ====== RESPONSIVE DESIGN PARA SA CELLPHONE ====== */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        overflow: auto;
+      }
+
+      .sidebar {
+        width: 100%;
+        min-height: 0;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px 15px;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .sidebar-brand {
+        justify-content: flex-start;
+        flex: 1 0 100%;
+        font-size: 22px;
+        padding: 0 0 10px;
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+
+      .sidebar-logo { width: 44px; height: 44px; }
+
+      .nav-menu {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0;
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      .nav-item {
+        padding: 12px 14px;
+        font-size: 14px;
+      }
+
+      .dropdown-btn {
+        padding: 12px 14px;
+        font-size: 14px;
+        width: auto;
+      }
+
+      .dropdown-container {
+        width: 100%;
+      }
+
+      .dropdown-container .nav-item {
+        padding: 10px 20px;
+      }
+
+      .main-content {
+        overflow: visible;
+      }
+
+      .controls-container {
+        flex-direction: column;
+        padding: 12px 16px;
+        gap: 10px;
+      }
+
+      .controls-container fieldset {
+        max-width: 100%;
+        height: 52px;
+      }
+
+      .controls-container input[type="text"] {
+        min-width: 100%;
+        height: 52px;
+        font-size: 16px;
+      }
+
+      .quiz-list-panel {
+        margin: 0 12px 12px;
+        padding: 16px;
+        overflow-x: auto;
+      }
+
+      .quiz-list-panel h2 {
+        font-size: 18px;
+      }
+
+      .quiz-list-table th,
+      .quiz-list-table td {
+        padding: 10px 8px;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .btn-delete-quiz {
+        padding: 8px 16px;
+        font-size: 13px;
+      }
+
+      .fab {
+        bottom: 16px;
+        right: 16px;
+        padding: 12px 18px;
+        font-size: 13px;
+      }
+
+      .modal-card {
+        max-width: 95%;
+        margin: 10px;
+      }
+
+      .modal-body {
+        padding: 16px;
+      }
+
+      .form-control {
+        height: 52px;
+        font-size: 16px;
+      }
+
+      .answer-key-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .tag-modal-card {
+        max-width: 90%;
+        margin: 10px;
+      }
+
+      .tag-modal-input {
+        height: 52px;
+        font-size: 16px;
+      }
+
+      .tag-btn {
+        height: 48px;
+        font-size: 14px;
+      }
+
+      .folder-row {
+        flex-direction: column;
+      }
+
+      .folder-btn {
+        width: 100%;
+        height: 52px;
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .nav-item {
+        padding: 10px 10px;
+        font-size: 12px;
+      }
+
+      .sidebar-brand { font-size: 16px; }
+
+      .sidebar-logo { width: 40px; height: 40px; }
+
+      .quiz-list-table th,
+      .quiz-list-table td {
+        font-size: 12px;
+        padding: 8px 6px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img class="sidebar-logo" src="testSync-brand-mark.png" alt="">
+      <span>TestSync</span>
+    </div>
+    <nav class="nav-menu">
+      <a href="dashboard.html" class="nav-item">Home Page</a>
+      <a href="quizzes.html" class="nav-item active">Quizzes</a>
+      <a href="students.html" class="nav-item">Students & Scores</a>
+      <a href="/omr-sheet" target="_blank" rel="noopener" class="nav-item">Print OMR Sheet</a>
+      <button class="dropdown-btn" id="accountButton" type="button" aria-expanded="false">Account &#9662;</button>
+      <div class="dropdown-container" id="accountDropdown">
+        <a href="profile.html" class="nav-item">Profile Settings</a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- Controls (Sort and Search) -->
+    <div class="controls-container">
+      <fieldset>
+        <legend>Sort</legend>
+        <select id="sort">
+          <option value="date">Date</option>
+          <option value="title">Name</option>
+        </select>
+      </fieldset>
+
+      <input type="text" id="search" placeholder="Search">
+    </div>
+
+    <!-- Quiz List Panel -->
+    <div class="quiz-list-panel">
+      <h2>All Quizzes</h2>
+      <table class="quiz-list-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Questions</th>
+            <th>Date Created</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="quizListBody">
+          <tr>
+            <td colspan="4" class="quiz-list-empty">No quizzes yet. Click "+ NEW QUIZ" to create one.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="quiz-result-count" id="quizResultCount"></div>
+    </div>
+
+    <!-- Floating Button para sa New Quiz -->
+    <button class="fab" id="openModalBtn">
+      <span>+</span> NEW QUIZ
+    </button>
+  </main>
+
+  <!-- 1. New Quiz Modal Pop-up -->
+  <div class="modal-overlay" id="quizModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        New Quiz
+      </div>
+      <div class="modal-body">
+        <input type="text" class="form-control" id="quizName" placeholder="Quiz Name">
+
+        <div class="answer-type-inputs" id="answerTypeInputs">
+          <div class="answer-type-input">
+            <label>MC (A-E)</label>
+            <input type="number" class="form-control" id="mcCount" placeholder="How many" min="0" max="60" inputmode="numeric" value="0">
+          </div>
+          <div class="answer-type-input">
+            <label>T/F</label>
+            <input type="number" class="form-control" id="tfCount" placeholder="How many" min="0" max="60" inputmode="numeric" value="0">
+          </div>
+          <div class="answer-type-input">
+            <label>Y/N</label>
+            <input type="number" class="form-control" id="ynCount" placeholder="How many" min="0" max="60" inputmode="numeric" value="0">
+          </div>
+        </div>
+        <div class="answer-type-order" aria-label="Question type order">
+          <div class="answer-type-input">
+            <label for="typeOrder1">1st Type</label>
+            <select class="form-control" id="typeOrder1">
+              <option value="MC">Multiple Choice</option><option value="TF">True / False</option><option value="YN">Yes / No</option>
+            </select>
+          </div>
+          <div class="answer-type-input">
+            <label for="typeOrder2">2nd Type</label>
+            <select class="form-control" id="typeOrder2">
+              <option value="TF">True / False</option><option value="MC">Multiple Choice</option><option value="YN">Yes / No</option>
+            </select>
+          </div>
+          <div class="answer-type-input">
+            <label for="typeOrder3">3rd Type</label>
+            <select class="form-control" id="typeOrder3">
+              <option value="YN">Yes / No</option><option value="MC">Multiple Choice</option><option value="TF">True / False</option>
+            </select>
+          </div>
+        </div>
+        <div class="answer-key-help">Choose the order of question types. Maximum: 60 questions total.</div>
+
+        <div class="answer-key-section">
+          <div class="answer-key-title">
+            <span>Answer Key</span>
+            <span class="answer-key-help">Select the correct answer for each item</span>
+          </div>
+          <div class="answer-key-grid" id="answerKeyGrid">
+            <span class="section-label">Enter the question counts above.</span>
+          </div>
+        </div>
+
+        <input type="date" class="form-control" id="quizDate">
+
+        <div class="folder-row">
+          <button class="folder-btn" title="Add Folder">📁⁺</button>
+          <select class="form-control" style="flex: 1;">
+            <option value="main">Main Folder</option>
+            <option value="quiz">Quizzes Folder</option>
+          </select>
+        </div>
+
+        <div class="section-label">classes(0)</div>
+
+        <div class="tags-row">
+          <span class="section-label" id="tagCountLabel">tags(0)</span>
+          <button class="add-tags-btn" id="openTagModalBtn">+ ADD TAGS</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="modal-btn btn-cancel" id="closeModalBtn">CANCEL</button>
+        <button class="modal-btn btn-save" id="saveQuizBtn">SAVE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Create or Select Tag Modal -->
+  <div class="modal-overlay" id="tagModal" style="z-index: 1100;">
+    <div class="tag-modal-card">
+      <div class="tag-modal-title">Create or Select Tag</div>
+      <input type="text" class="tag-modal-input" placeholder="Tag Name" id="tagNameInput">
+      <div class="tag-modal-actions">
+        <button class="tag-btn tag-btn-cancel" id="closeTagModalBtn">CANCEL</button>
+        <button class="tag-btn tag-btn-create" id="createTagBtn">CREATE TAG</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Interactions -->
+  <script src="api.js"></script>
+  <script>
+    // Elements for Quiz Modal
+    const openModalBtn = document.getElementById('openModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const quizModal = document.getElementById('quizModal');
+    const saveQuizBtn = document.getElementById('saveQuizBtn');
+const quizName = document.getElementById('quizName');
+    const answerKeyGrid = document.getElementById('answerKeyGrid');
+
+    // Elements for Tag Modal
+    const openTagModalBtn = document.getElementById('openTagModalBtn');
+    const closeTagModalBtn = document.getElementById('closeTagModalBtn');
+    const tagModal = document.getElementById('tagModal');
+    const createTagBtn = document.getElementById('createTagBtn');
+    const tagNameInput = document.getElementById('tagNameInput');
+    const tagCountLabel = document.getElementById('tagCountLabel');
+    const accountButton = document.getElementById('accountButton');
+    const accountDropdown = document.getElementById('accountDropdown');
+
+    // Elements for Search, Sort, and Quiz List
+    const searchInput = document.getElementById('search');
+    const sortSelect = document.getElementById('sort');
+    const quizListBody = document.getElementById('quizListBody');
+    const quizResultCount = document.getElementById('quizResultCount');
+
+    let createdTagsCount = 0;
+    let quizzes = [];
+    let editingQuizId = null;
+
+    // --- Load & Render Quizzes ---
+    function getQuizzes() {
+      return quizzes;
+    }
+
+    async function loadQuizzes() {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      try {
+        const response = await fetch(scanCheckApiUrl('/api/quizzes'), { cache: 'no-store', signal: controller.signal });
+        if (!response.ok) {
+          let detail = '';
+          try { detail = (await response.json()).message || ''; } catch (_) {}
+          throw new Error(`Unable to load quizzes (${response.status})${detail ? `: ${detail}` : ''}`);
+        }
+        const data = await response.json();
+        quizzes = data.map((quiz) => ({
+          id: quiz._id,
+          title: quiz.title,
+          questionCount: quiz.totalItems,
+          answerKey: quiz.answerKey,
+          createdAt: quiz.createdAt
+        }));
+      } catch (error) {
+        quizzes = [];
+        console.error(error);
+        const reason = error.name === 'AbortError'
+          ? 'The quiz server took too long to respond.'
+          : error.message;
+        quizListBody.innerHTML = `<tr><td colspan="4" class="quiz-list-empty">${reason}. Start the server and MongoDB, then refresh.</td></tr>`;
+        quizResultCount.textContent = '';
+        return;
+      } finally {
+        clearTimeout(timeout);
+      }
+      renderQuizList();
+    }
+
+    function renderQuizList() {
+      let visibleQuizzes = [...getQuizzes()];
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      const sortBy = sortSelect.value;
+
+      // Filter by search
+      if (searchTerm) {
+        visibleQuizzes = visibleQuizzes.filter(q => q.title.toLowerCase().includes(searchTerm));
+      }
+
+      // Sort
+      if (sortBy === 'date') {
+        visibleQuizzes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      } else if (sortBy === 'title') {
+        visibleQuizzes.sort((a, b) => a.title.localeCompare(b.title));
+      }
+
+      // Render
+      quizListBody.innerHTML = '';
+
+      if (visibleQuizzes.length === 0) {
+        const hasSearch = searchInput.value.trim() !== '';
+        const msg = hasSearch
+          ? 'No quizzes match your search.'
+          : 'No quizzes yet. Click "+ NEW QUIZ" to create one.';
+        quizListBody.innerHTML = `<tr><td colspan="4" class="quiz-list-empty">${msg}</td></tr>`;
+        quizResultCount.textContent = '';
+        return;
+      }
+
+      visibleQuizzes.forEach((quiz) => {
+        const dateStr = new Date(quiz.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'short', day: 'numeric'
+        });
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${quiz.title}</strong></td>
+          <td>${quiz.questionCount}</td>
+          <td>${dateStr}</td>
+          <td>
+            <button class="btn-delete-quiz" data-print-id="${quiz.id}">PRINT SHEET</button>
+            <button class="btn-delete-quiz" data-edit-id="${quiz.id}">EDIT KEY</button>
+            <button class="btn-delete-quiz" data-id="${quiz.id}">DELETE</button>
+          </td>
+        `;
+        quizListBody.appendChild(row);
+      });
+
+      quizResultCount.textContent = `Showing ${visibleQuizzes.length} quiz(es)`;
+    }
+
+    function getHomeStudents() {
+      try {
+        const rosters = JSON.parse(localStorage.getItem('scancheck_student_rosters') || '{}');
+        const recordFiles = JSON.parse(localStorage.getItem('scancheck_local_record_files') || '[]');
+        const activeFolders = new Set(Array.isArray(recordFiles) ? recordFiles.map((file) =>
+          `${String(file.section || '').trim()}||${String(file.academicYear || '').trim()}`
+        ) : []);
+        const folders = new Map();
+        Object.entries(rosters).forEach(([storedKey, names]) => {
+          if (!Array.isArray(names)) return;
+          const folderKey = storedKey.replace(/::(boys|girls)$/, '');
+          const folderParts = folderKey.split(/\s+[^\w\s]+\s+/);
+          const folderSection = String(folderParts[0] || '').trim();
+          const folderYear = String(folderParts.slice(1).join(' ▸ ') || '').trim();
+          if (!activeFolders.has(`${folderSection}||${folderYear}`)) return;
+          if (!folders.has(folderKey)) folders.set(folderKey, []);
+          names.forEach((value) => {
+            const parts = String(value || '').split(/\s+-\s+/);
+            const name = parts.shift().trim();
+            if (name) folders.get(folderKey).push({
+              name,
+              section: parts.join(' - ').trim()
+            });
+          });
+        });
+        return [...folders.entries()].map(([key, students]) => {
+          const folderParts = key.split(/\s+(?:▸|â–¸)\s+/);
+          const folderSection = folderParts[0] || '';
+          return {
+            label: key.replace(/â–¸/g, '▸'),
+            section: folderSection,
+            students: students
+              .map((student) => ({ ...student, section: student.section || folderSection }))
+              .filter((student, index, list) => list.findIndex((item) =>
+                item.name.toLowerCase() === student.name.toLowerCase()
+              ) === index)
+          };
+        }).filter((folder) => folder.students.length);
+      } catch {
+        return [];
+      }
+    }
+
+    // Event delegation for delete buttons
+    quizListBody.addEventListener('click', async (e) => {
+      const deleteBtn = e.target.closest('.btn-delete-quiz');
+      if (!deleteBtn) return;
+
+      const printId = deleteBtn.dataset.printId;
+      if (printId) {
+        const quiz = quizzes.find((item) => item.id === printId);
+        if (!quiz) return;
+        // Use the student roster saved from Home/Dashboard. The same
+        // localStorage key is used by dashboard.html.
+        const folders = getHomeStudents();
+        if (!folders.length) {
+          alert('No student names found on Home. Add a student name and section first.');
+          return;
+        }
+        const folderChoices = folders.map((folder, index) =>
+          `${index + 1}. ${folder.label}`
+        ).join('\n');
+        const folderSelected = prompt(`Choose a folder:\n\n${folderChoices}\n\nEnter the number:`);
+        if (folderSelected === null) return;
+        const folderIndex = Number.parseInt(folderSelected.trim(), 10) - 1;
+        if (!Number.isInteger(folderIndex) || !folders[folderIndex]) {
+          alert('Invalid selection. Choose a number from the list.');
+          return;
+        }
+        const folder = folders[folderIndex];
+        // Send the complete folder roster. The OMR page automatically adds
+        // another bond-paper page whenever more than four names are present.
+        const answerCounts = countAnswerTypes(quiz.answerKey);
+        const typeOrder = [...new Set(normalizeQuizData(quiz.answerKey).map((entry) => entry.t))];
+        const query = new URLSearchParams({
+          items: quiz.questionCount,
+          mc: answerCounts.MC,
+          tf: answerCounts.TF,
+          yn: answerCounts.YN,
+          typeOrder: typeOrder.join(','),
+          quiz: quiz.title,
+          quizId: quiz.id,
+          paper: 'short',
+          students: JSON.stringify(folder.students)
+        });
+        const printUrl = `/omr-sheet?${query.toString()}`;
+        const printWindow = window.open(printUrl, '_blank', 'noopener');
+        if (!printWindow) {
+          window.location.href = printUrl;
+        }
+        return;
+      }
+
+const editId = deleteBtn.dataset.editId;
+      if (editId) {
+        const quiz = quizzes.find((item) => item.id === editId);
+        if (!quiz) return;
+editingQuizId = quiz.id;
+        quizName.value = quiz.title;
+        // Populate the three type-count inputs from the quiz's answer key.
+        const counts = countAnswerTypes(quiz.answerKey);
+        mcCountEl.value = counts.MC;
+        tfCountEl.value = counts.TF;
+        ynCountEl.value = counts.YN;
+        const existingOrder = [];
+        normalizeQuizData(quiz.answerKey).forEach(({ t }) => {
+          if (!existingOrder.includes(t)) existingOrder.push(t);
+        });
+        setTypeOrder(existingOrder);
+        typeOrderSelects.forEach((select) => {
+          select.dataset.previousValue = select.value;
+        });
+        renderAnswerKey(normalizeQuizData(quiz.answerKey));
+        saveQuizBtn.textContent = 'UPDATE';
+        quizModal.classList.add('active');
+        return;
+      }
+
+      const id = deleteBtn.dataset.id;
+      if (!confirm('Are you sure you want to delete this quiz')) return;
+      try {
+        const response = await fetch(scanCheckApiUrl(`/api/quizzes/${encodeURIComponent(id)}`), { method: 'DELETE' });
+        if (!response.ok) throw new Error('Unable to delete quiz');
+        await loadQuizzes();
+      } catch (error) {
+        alert('Could not delete the quiz. Please check the server connection.');
+      }
+    });
+
+    // Search & Sort event listeners
+    searchInput.addEventListener('input', renderQuizList);
+    sortSelect.addEventListener('change', renderQuizList);
+
+    const TYPE_CHOICES = {
+      MC: ['A', 'B', 'C', 'D', 'E'],
+      TF: ['T', 'F'],
+      YN: ['Y', 'N']
+    };
+
+    // Accepts either legacy plain numbers (MC only) or { t, a } objects and
+    // returns an array of { t, a } entries for rendering.
+    function normalizeQuizData(answerKey) {
+      return (answerKey || []).map((entry) => {
+        if (typeof entry === 'number') {
+          return { t: 'MC', a: entry };
+        }
+        return {
+          t: String(entry.t || 'MC').toUpperCase(),
+          a: entry.a === null || entry.a === undefined || entry.a === '' ? null : Number(entry.a)
+        };
+      });
+    }
+
+    // Format a normalized { t, a } entry into its label (e.g. A, T, F, N).
+    function answerLabel(entry) {
+      const t = String(entry.t || 'MC').toUpperCase();
+      const choices = TYPE_CHOICES[t] || TYPE_CHOICES.MC;
+      return choices[entry.a] || '';
+    }
+
+    // Count how many MC / T/F / Y/N entries exist in an answer key, so the
+    // three "how many" inputs can be re-populated when editing a quiz.
+    function countAnswerTypes(answerKey) {
+      const counts = { MC: 0, TF: 0, YN: 0 };
+      (answerKey || []).forEach((entry) => {
+        let t = 'MC';
+        if (typeof entry === 'object' && entry !== null) {
+          t = String(entry.t || 'MC').toUpperCase();
+        }
+        if (!(t in counts)) t = 'MC';
+        counts[t]++;
+      });
+      return counts;
+    }
+
+let mcCountEl = document.getElementById('mcCount');
+    let tfCountEl = document.getElementById('tfCount');
+    let ynCountEl = document.getElementById('ynCount');
+
+    // Total questions = sum of the MC, T/F, and Y/N counts.
+    function getTotalCount() {
+      return (Math.max(0, Number.parseInt(mcCountEl.value, 10) || 0) +
+        Math.max(0, Number.parseInt(tfCountEl.value, 10) || 0) +
+        Math.max(0, Number.parseInt(ynCountEl.value, 10) || 0));
+    }
+
+    const typeOrderSelects = [1, 2, 3].map((position) => document.getElementById(`typeOrder${position}`));
+    function getTypeOrder() {
+      return typeOrderSelects.map((select) => select.value);
+    }
+
+    function setTypeOrder(order) {
+      const uniqueOrder = [...new Set(order.filter((type) => TYPE_CHOICES[type]))];
+      ['MC', 'TF', 'YN'].forEach((type) => {
+        if (!uniqueOrder.includes(type)) uniqueOrder.push(type);
+      });
+      typeOrderSelects.forEach((select, index) => {
+        select.value = uniqueOrder[index];
+      });
+    }
+
+    function handleTypeOrderChange(changedSelect) {
+      const duplicate = typeOrderSelects.find((select) =>
+        select !== changedSelect && select.value === changedSelect.value
+      );
+      if (duplicate) duplicate.value = changedSelect.dataset.previousValue;
+      typeOrderSelects.forEach((select) => {
+        select.dataset.previousValue = select.value;
+      });
+      const currentAnswers = [...answerKeyGrid.querySelectorAll('.answer-options')].map((options) => {
+        const type = options.dataset.type || 'MC';
+        const selected = options.querySelector('.answer-option.selected')?.dataset.answer;
+        const answerIndex = TYPE_CHOICES[type].indexOf(selected);
+        return { t: type, a: answerIndex >= 0 ? answerIndex : null };
+      });
+      renderAnswerKey(currentAnswers);
+    }
+    typeOrderSelects.forEach((select) => {
+      select.dataset.previousValue = select.value;
+      select.addEventListener('change', () => handleTypeOrderChange(select));
+    });
+
+    function handleQuestionCountInput(changedInput) {
+      const countInputs = [mcCountEl, tfCountEl, ynCountEl];
+      const otherTotal = countInputs
+        .filter((input) => input !== changedInput)
+        .reduce((total, input) => total + Math.max(0, Number.parseInt(input.value, 10) || 0), 0);
+      const enteredCount = Math.max(0, Number.parseInt(changedInput.value, 10) || 0);
+      changedInput.value = Math.min(enteredCount, 60, Math.max(0, 60 - otherTotal));
+      renderAnswerKey();
+    }
+
+    // Build the answer key grouped in the selected type order.
+    function renderAnswerKey(seedData = []) {
+      answerKeyGrid.innerHTML = '';
+
+      // Determine the group counts from the three count inputs (default to 0).
+      const mcCount = Math.max(0, Number.parseInt(mcCountEl.value, 10) || 0);
+      const tfCount = Math.max(0, Number.parseInt(tfCountEl.value, 10) || 0);
+      const ynCount = Math.max(0, Number.parseInt(ynCountEl.value, 10) || 0);
+      const total = mcCount + tfCount + ynCount;
+
+      if (total < 1) {
+        answerKeyGrid.innerHTML = '<span class="section-label">Enter how many MC, T/F, and Y/N questions above.</span>';
+        return;
+      }
+
+      if (total > 60) {
+        answerKeyGrid.innerHTML = '<span class="section-label">Total must be between 1 and 60 questions.</span>';
+        return;
+      }
+
+      const data = normalizeQuizData(seedData);
+      const seedByType = { MC: [], TF: [], YN: [] };
+      data.forEach((entry) => {
+        if (seedByType[entry.t]) seedByType[entry.t].push(entry);
+      });
+      const countByType = { MC: mcCount, TF: tfCount, YN: ynCount };
+      const groups = getTypeOrder().map((type) => [type, countByType[type]]);
+
+      let itemNo = 0;
+      groups.forEach(([type, count]) => {
+        if (count <= 0) return;
+        // Group header row
+        const header = document.createElement('div');
+        header.className = 'answer-group-header';
+        header.textContent = type === 'MC' ? 'MULTIPLE CHOICE (A-E)' : type === 'TF' ? 'TRUE / FALSE' : 'YES / NO';
+        answerKeyGrid.appendChild(header);
+
+        const groupItems = Array.from({ length: count }, () =>
+          seedByType[type].shift() || { t: type, a: null }
+        );
+
+        groupItems.forEach((entry) => {
+          itemNo++;
+          const wrapper = document.createElement('div');
+          wrapper.className = 'answer-key-item';
+          wrapper.innerHTML = `
+            <span>Q${itemNo}</span>
+            <div class="answer-options" data-question="${itemNo}" data-type="${entry.t}" role="group" aria-label="Answer for question ${itemNo}">
+              ${(TYPE_CHOICES[entry.t] || TYPE_CHOICES.MC).map((answer) => {
+                const isSelected = entry.a !== null && entry.a !== undefined && answerLabel({ t: entry.t, a: entry.a }) === answer;
+                return `<button type="button" class="answer-option ${isSelected ? 'selected' : ''}" data-answer="${answer}" aria-pressed="${isSelected}">${answer}</button>`;
+              }).join('')}
+            </div>`;
+          answerKeyGrid.appendChild(wrapper);
+        });
+      });
+    }
+
+    // Same Account dropdown behavior as the dashboard.
+    accountButton.addEventListener('click', () => {
+      const isOpen = accountDropdown.style.display === 'block';
+      accountDropdown.style.display = isOpen ? 'none' : 'block';
+      accountButton.setAttribute('aria-expanded', String(!isOpen));
+    });
+
+    // Open/Close Main Quiz Modal
+    function resetQuizForm() {
+      editingQuizId = null;
+      saveQuizBtn.textContent = 'SAVE';
+      quizName.value = '';
+      mcCountEl.value = 0;
+      tfCountEl.value = 0;
+      ynCountEl.value = 0;
+      setTypeOrder(['MC', 'TF', 'YN']);
+      typeOrderSelects.forEach((select) => {
+        select.dataset.previousValue = select.value;
+      });
+      renderAnswerKey();
+    }
+    openModalBtn.addEventListener('click', () => { resetQuizForm(); quizModal.classList.add('active'); });
+    closeModalBtn.addEventListener('click', () => { quizModal.classList.remove('active'); resetQuizForm(); });
+// Re-render the grouped answer key whenever a type count changes.
+    // IMPORTANT: wrap in an arrow so the Event object is NOT passed as
+    // seedData to renderAnswerKey (which would throw and hide the bubbles).
+    mcCountEl.addEventListener('input', () => handleQuestionCountInput(mcCountEl));
+    tfCountEl.addEventListener('input', () => handleQuestionCountInput(tfCountEl));
+    ynCountEl.addEventListener('input', () => handleQuestionCountInput(ynCountEl));
+    answerKeyGrid.addEventListener('click', (event) => {
+      const selectedOption = event.target.closest('.answer-option');
+      if (!selectedOption) return;
+
+      const options = selectedOption.closest('.answer-options').querySelectorAll('.answer-option');
+      options.forEach((option) => {
+        const isSelected = option === selectedOption;
+        option.classList.toggle('selected', isSelected);
+        option.setAttribute('aria-pressed', String(isSelected));
+      });
+    });
+
+saveQuizBtn.addEventListener('click', async () => {
+      const title = quizName.value.trim();
+      const count = getTotalCount();
+const answerKey = [...answerKeyGrid.querySelectorAll('.answer-options')].map((options, index) => {
+        const selected = options.querySelector('.answer-option.selected')?.dataset.answer || '';
+        const type = options.dataset.type || 'MC';
+        let a;
+        if (type === 'MC') {
+          const map = { A: 0, B: 1, C: 2, D: 3, E: 4 };
+          a = map[selected];
+        } else if (type === 'TF') {
+          // a is the index in ['T','F'] => T=0, F=1.
+          a = selected === 'T' ? 0 : (selected === 'F' ? 1 : null);
+        } else if (type === 'YN') {
+          // a is the index in ['Y','N'] => Y=0, N=1.
+          a = selected === 'Y' ? 0 : (selected === 'N' ? 1 : null);
+        } else {
+          a = null;
+        }
+        return { t: type, a };
+      });
+
+      if (!title) {
+        alert('Please enter a quiz name.');
+        quizName.focus();
+        return;
+      }
+      if (!Number.isInteger(count) || count < 1 || count > 60) {
+        alert('Enter a question count from 1 to 60.');
+        mcCountEl.focus();
+        return;
+      }
+      if (answerKey.length !== count || answerKey.some((entry) => entry.a === null || entry.a === undefined)) {
+        alert('Please select an answer for every question. Check the type (MC / T/F / Y/N) and answer for each item.');
+        return;
+      }
+
+      saveQuizBtn.disabled = true;
+      try {
+        const response = await fetch(scanCheckApiUrl(editingQuizId ? `/api/quizzes/${encodeURIComponent(editingQuizId)}` : '/api/quizzes'), {
+          method: editingQuizId ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, totalItems: count, answerKey })
+        });
+        if (!response.ok) throw new Error('Unable to save quiz');
+        await loadQuizzes();
+      } catch (error) {
+        alert('Could not save the quiz. Please check the server and MongoDB connection.');
+        return;
+      } finally {
+        saveQuizBtn.disabled = false;
+      }
+      alert(`Quiz "${title}" ${editingQuizId ? 'updated' : 'created'} with ${count} answer-key items.`);
+      quizModal.classList.remove('active');
+      resetQuizForm();
+    });
+
+    // Open/Close Tag Modal
+    openTagModalBtn.addEventListener('click', () => {
+      tagModal.classList.add('active');
+    });
+
+    closeTagModalBtn.addEventListener('click', () => {
+      tagModal.classList.remove('active');
+      tagNameInput.value = '';
+    });
+
+    // Create Tag Action
+    createTagBtn.addEventListener('click', () => {
+      const tagVal = tagNameInput.value.trim();
+      if (tagVal !== '') {
+        createdTagsCount++;
+        tagCountLabel.textContent = `tags(${createdTagsCount})`;
+        alert(`Tag "${tagVal}" created.`);
+        tagNameInput.value = '';
+        tagModal.classList.remove('active');
+      } else {
+        alert('Please enter a tag name.');
+      }
+    });
+
+    // Outside clicks
+    quizModal.addEventListener('click', (e) => {
+      if (e.target === quizModal) { quizModal.classList.remove('active'); resetQuizForm(); }
+    });
+    tagModal.addEventListener('click', (e) => {
+      if (e.target === tagModal) tagModal.classList.remove('active');
+    });
+
+    // Initial render of quiz list
+    loadQuizzes();
+  </script>
+
+</body>
+</html>

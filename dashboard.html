@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Dashboard</title>
+    <style> 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background-color: maroon;
+            color: white;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 0.02em;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            padding: 0 16px 22px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo {
+            display: block;
+            width: 48px;
+            height: 48px;
+            flex: 0 0 48px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+        }
+
+        .sidebar-title span {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        .sidebar a, .dropdown-btn {
+            display: block;
+            color: #bdc3c7;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 16px;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .sidebar a:hover, .sidebar a.active, .dropdown-btn:hover {
+            background-color: #600000;
+            color: white;
+        }
+
+        .dropdown-container {
+            display: none;
+            background-color: #4a0000;
+            padding-left: 15px;
+        }
+
+        .dropdown-container a {
+            padding: 12px 25px;
+            font-size: 14px;
+        }
+
+        /* MAIN CONTENT AREA */
+        .main-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 32px 20px 20px;
+            overflow-y: auto;
+            background-color: #f0f2f5;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)),
+                url("pantay-school-logo-transparent.png");
+            background-position: center, center;
+            background-size: 100% 100%, auto 100%;
+            background-repeat: no-repeat;
+        }
+
+        .main-container::before {
+            position: absolute;
+            z-index: 2;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 12px;
+            background: maroon;
+            content: '';
+        }
+
+        .header-section {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: transparent;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 10px 15px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .filter-section {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            background: transparent;
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .btn-date {
+            padding: 8px 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: maroon;
+        }
+
+        .btn-date:hover {
+            background-color: #eceff1;
+        }
+
+        .btn-create {
+            background-color: maroon;
+            color: white;
+            border: none;
+        }
+
+        .btn-create:hover {
+            background-color: #600000;
+            color: white;
+        }
+
+        .files-label {
+            font-size: 15px;
+            color: maroon;
+            font-weight: bold;
+        }
+
+        .content-box {
+            position: relative;
+            z-index: 1;
+            background-color: transparent;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        #recordFileForm {
+            display: none;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            padding: 16px;
+            border: 1px dashed #bbb;
+            border-radius: 8px;
+        }
+
+        #recordFileForm input {
+            padding: 9px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .dashboard-content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .dashboard-panel {
+            min-width: 0;
+            padding: 16px;
+            border: 1px solid #e5dfe0;
+            border-radius: 8px;
+            background: transparent;
+        }
+
+        .dashboard-panel h2 {
+            margin-bottom: 14px;
+            color: maroon;
+            font-size: 18px;
+        }
+
+        .upload-status {
+            min-height: 20px;
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 13px;
+        }
+
+        .upload-status.error {
+            color: #b22;
+        }
+
+        .upload-status.success {
+            color: #1a7f37;
+        }
+
+        .excel-import-form {
+            display: grid;
+            gap: 8px;
+        }
+
+        .excel-import-form select,
+        .excel-import-form input[type="file"] {
+            width: 100%;
+            min-width: 0;
+            padding: 9px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #fff;
+        }
+
+        .excel-import-form button {
+            min-height: 38px;
+            padding: 8px 12px;
+            border: 0;
+            border-radius: 6px;
+            background: maroon;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .excel-import-form button:hover {
+            background: #600000;
+        }
+
+        .excel-import-form button:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-content-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        .student-roster {
+            margin-top: 12px;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid #e9dfe1;
+            border-radius: 8px;
+        }
+
+        .student-roster-header {
+            font-size: 13px;
+            font-weight: 700;
+            color: maroon;
+            margin-bottom: 10px;
+        }
+
+        .student-roster-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .clear-student-names-btn {
+            padding: 6px 9px;
+            border: 0;
+            border-radius: 5px;
+            background: #8b101b;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .clear-student-names-btn:hover {
+            background: #600000;
+        }
+
+        .student-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .student-row input {
+            flex: 1 1 220px;
+            min-width: 180px;
+            padding: 9px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .student-row button,
+        .student-print-btn {
+            background: maroon;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 9px 12px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .student-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .student-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            border: 1px solid #e6dfe0;
+            background: #fff;
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+
+        .student-item .student-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .student-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .student-delete-btn {
+            background: #8f1d1d;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 9px 12px;
+            cursor: pointer;
+        }
+
+        .folder {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        .folder-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            background: transparent;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            flex-wrap: wrap;
+        }
+
+        .folder-header:hover {
+            background: rgba(241, 233, 235, 0.55);
+        }
+
+        .folder-icon {
+            font-size: 22px;
+            color: maroon;
+        }
+
+        .folder-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            flex: 1;
+        }
+
+        .folder-section {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        .folder-count {
+            background: maroon;
+            color: white;
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .delete-folder-btn {
+            margin-left: auto;
+            padding: 6px 10px;
+            border: 0;
+            border-radius: 6px;
+            background: #ffe5e5;
+            color: #9b1c1c;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .delete-folder-btn:hover {
+            background: #ffcaca;
+        }
+
+        .folder-body {
+            display: none;
+            padding: 8px 16px 16px;
+            background: transparent;
+        }
+
+        .folder-body.open {
+            display: block;
+        }
+
+        .record-file {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+            background: #fafafa;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 6px 6px 6px 0;
+        }
+
+        .record-file:hover {
+            border-color: maroon;
+        }
+
+        .delete-file-btn {
+            background: #8f1d1d;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 9px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .delete-file-btn:hover {
+            background: #600000;
+        }
+
+        .scores-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .scores-table th,
+        .scores-table td {
+            border: 1px solid #e7e7e7;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .scores-table th {
+            background-color: #f9f1f2;
+            color: maroon;
+            font-weight: 700;
+        }
+
+        .empty-note {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .print-record {
+            margin-left: 8px;
+            background: maroon;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .print-record:hover {
+            background: #600000;
+        }
+
+        /* ====== RESPONSIVE ====== */
+        @media (max-width: 768px) {
+            body { flex-direction: column; height: auto; min-height: 100vh; }
+            .sidebar { width: 100%; min-height: 0; flex-direction: row; flex-wrap: wrap; padding: 10px 15px; align-items: center; gap: 5px; }
+            .sidebar .sidebar-title { justify-content: flex-start; font-size: 22px !important; padding: 0 0 10px !important; border-bottom: none; margin-bottom: 0; margin-right: 0; flex: 1 0 100%; }
+            .sidebar-logo { width: 44px; height: 44px; flex-basis: 44px; }
+            .sidebar a, .dropdown-btn { padding: 12px 14px; font-size: 14px; width: auto; }
+            .dropdown-container { width: 100%; }
+            .dropdown-container a { padding: 10px 20px; font-size: 14px; }
+            .main-container { padding: 24px 12px 12px; }
+            .header-section { padding: 12px; margin-bottom: 12px; }
+            .search-bar { padding: 12px 14px; font-size: 16px; height: 48px; }
+            .filter-section { padding: 10px 12px; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+            .content-box { padding: 16px; }
+            .folder-header { padding: 12px; }
+            .scores-table { display: block; overflow-x: auto; }
+            .scores-table th, .scores-table td { padding: 8px; font-size: 13px; white-space: nowrap; }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar a, .dropdown-btn { padding: 10px 10px; font-size: 12px; }
+            .sidebar .sidebar-title { font-size: 20px !important; }
+            .sidebar-logo { width: 40px; height: 40px; flex-basis: 40px; }
+        }
+    </style>
+    <link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-title">
+            <img class="sidebar-logo" src="testSync-brand-mark.png" alt="">
+            <span>TestSync</span>
+        </div>
+        <a href="dashboard.html" class="active">Home Page</a>
+        <a href="quizzes.html">Quizzes</a>
+        <a href="students.html">Students & Scores</a>
+        <a href="/omr-sheet" target="_blank" rel="noopener">Print OMR Sheet</a>
+        
+        <button class="dropdown-btn" onclick="toggleDropdown()">Account ▾</button>
+        <div class="dropdown-container" id="accountDropdown">
+            <a href="profile.html">Profile Settings</a>
+        </div>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="header-section">
+            <input type="text" class="search-bar" id="searchBar" placeholder="Search section, school year, file, or student...">
+        </div>
+
+        <div class="filter-section">
+            <button class="btn-date btn-create" id="newFileBtn" style="display:none" aria-hidden="true">+ NEW STUDENT FOLDER</button>
+            <span class="files-label">Student folders grouped by Section & School Year</span>
+        </div>
+
+        <div class="content-box">
+            <p id="welcomeMessage" style="font-weight: bold; margin-bottom: 12px; color: #333;">Records</p>
+            <form id="recordFileForm">
+                <input id="recordTitle" required placeholder="Folder name (e.g. Math Section A)">
+                <input id="recordYear" required placeholder="School year (e.g. 2026-2027)">
+                <button type="submit" class="btn-date btn-create">CREATE FOLDER</button>
+            </form>
+            <div class="dashboard-content-grid">
+                <section class="dashboard-panel" aria-labelledby="studentFoldersHeading">
+                    <h2 id="studentFoldersHeading">Student Folders</h2>
+                    <div id="recordFiles"></div>
+                </section>
+                <section class="dashboard-panel" aria-labelledby="excelImportHeading">
+                    <h2 id="excelImportHeading">Student Name Import</h2>
+                    <form id="excelImportForm" class="excel-import-form">
+                        <select id="excelFolderSelect" hidden><option value=""></option></select>
+                        <select id="excelGenderSelect" hidden><option value="boys">Boys</option></select>
+                        <input id="excelFileInput" type="file" accept=".xlsx,.docx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required aria-label="Choose an Excel or Word student list">
+                        <button id="excelImportButton" type="submit">Import Student List</button>
+                    </form>
+                    <p id="excelImportStatus" class="upload-status" role="status" aria-live="polite"></p>
+                </section>
+            </div>
+            <div id="recordScores" style="margin-top:12px;"></div>
+        </div>
+
+    </div>
+
+    <script src="api.js"></script>
+    <script src="/node_modules/read-excel-file/bundle/read-excel-file.min.js"></script>
+    <script src="/node_modules/mammoth/mammoth.browser.min.js"></script>
+    <script>
+        let loggedInUser = null;
+        const currentUserData = localStorage.getItem('currentScanCheckUser');
+
+        if (!currentUserData) {
+            window.location.href = "log.html";
+        } else {
+            loggedInUser = JSON.parse(currentUserData);
+            document.getElementById('welcomeMessage').innerText = "Welcome back, " + loggedInUser.username + ".";
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('accountDropdown');
+            dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+        }
+
+        const fileForm = document.getElementById('recordFileForm');
+        const filesContainer = document.getElementById('recordFiles');
+        const scoresContainer = document.getElementById('recordScores');
+        const searchBar = document.getElementById('searchBar');
+        const excelImportForm = document.getElementById('excelImportForm');
+        const excelFolderSelect = document.getElementById('excelFolderSelect');
+        const excelGenderSelect = document.getElementById('excelGenderSelect');
+        const excelFileInput = document.getElementById('excelFileInput');
+        const excelImportButton = document.getElementById('excelImportButton');
+        const excelImportStatus = document.getElementById('excelImportStatus');
+        const maxExcelFileSize = 8 * 1024 * 1024;
+
+        document.getElementById('newFileBtn').addEventListener('click', () => {
+            fileForm.style.display = fileForm.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        const escapeHtml = (value) => String(value || '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+
+        let allFiles = [];
+        let allScores = [];
+        let expandedFolderKey = null;
+        const studentRosterStorageKey = 'scancheck_student_rosters';
+        const localRecordFilesKey = 'scancheck_local_record_files';
+        const localScoresKey = 'scancheck_local_scores';
+
+        function getStoredLocalArray(key) {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveStoredLocalArray(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        function getStudentRosters() {
+            try {
+                return JSON.parse(localStorage.getItem(studentRosterStorageKey) || '{}');
+            } catch {
+                return {};
+            }
+        }
+
+        function saveStudentRosters(rosters) {
+            localStorage.setItem(studentRosterStorageKey, JSON.stringify(rosters));
+        }
+
+        function addStudentNameToFolder(section, year, newName, gender = 'boys') {
+            const rosters = getStudentRosters();
+            const key = folderKey(section, year) + '::' + gender;
+            const names = Array.isArray(rosters[key]) ? rosters[key] : [];
+            const cleanName = String(newName || '').trim();
+            if (!cleanName) return;
+            const uniqueNames = Array.from(new Set([...names, cleanName]));
+            rosters[key] = uniqueNames;
+            saveStudentRosters(rosters);
+        }
+
+        function addStudentNamesToFolder(section, year, newNames, gender) {
+            const rosters = getStudentRosters();
+            const key = folderKey(section, year) + '::' + gender;
+            const existing = getStudentNamesForFolder(section, year, gender);
+            const seen = new Set(existing.map(name => name.toLocaleLowerCase()));
+            let added = 0;
+
+            newNames.forEach(name => {
+                const cleanName = String(name || '').trim();
+                const normalizedName = cleanName.toLocaleLowerCase();
+                if (!cleanName || seen.has(normalizedName)) return;
+                existing.push(cleanName);
+                seen.add(normalizedName);
+                added += 1;
+            });
+
+            rosters[key] = existing;
+            saveStudentRosters(rosters);
+            return added;
+        }
+
+        function getStudentNamesForFolder(section, year, gender = 'boys') {
+            const rosters = getStudentRosters();
+            const baseKey = folderKey(section, year);
+            const key = baseKey + '::' + gender;
+            const current = Array.isArray(rosters[key]) ? rosters[key] : [];
+            // Keep students saved by the older single-list version.
+            const legacy = gender === 'boys' && Array.isArray(rosters[baseKey]) ? rosters[baseKey] : [];
+            return [...new Set([...legacy, ...current])];
+        }
+
+        // A folder key is the section + school year. If a section is "RAIN" and
+        // the school year is "12 CSS", the folder label shows "12 CSS" and all of
+        // that student's documents/scores are grouped inside it.
+        function folderKey(section, year) {
+            return (section || 'No Section') + ' ▸ ' + (year || 'No Year');
+        }
+
+        function groupByFolders() {
+            const folders = new Map();
+            allFiles.forEach(file => {
+                const key = folderKey(file.section, file.academicYear);
+                if (!folders.has(key)) folders.set(key, { section: file.section, year: file.academicYear, files: [], scores: [] });
+                folders.get(key).files.push(file);
+            });
+
+            return Array.from(folders.values());
+        }
+
+        function renderExcelFolderOptions() {
+            const selectedKey = excelFolderSelect.value;
+            const folders = groupByFolders();
+            excelFolderSelect.innerHTML = '<option value="">Choose a Student Folder</option>' + folders.map(folder => {
+                const key = folderKey(folder.section, folder.year);
+                const label = `${folder.section || 'No Section'} - ${folder.year || 'No School Year'}`;
+                return `<option value="${escapeHtml(key)}">${escapeHtml(label)}</option>`;
+            }).join('');
+
+            if (folders.some(folder => folderKey(folder.section, folder.year) === selectedKey)) {
+                excelFolderSelect.value = selectedKey;
+            }
+        }
+
+        function renderFolders() {
+            renderExcelFolderOptions();
+            const query = searchBar.value.toLowerCase().trim();
+            const folders = groupByFolders();
+
+            let filtered = folders;
+            if (query) {
+                filtered = folders.filter(f =>
+                    (f.section || '').toLowerCase().includes(query) ||
+                    (f.year || '').toLowerCase().includes(query) ||
+                    f.files.some(file => (file.title || '').toLowerCase().includes(query)) ||
+                    getStudentNamesForFolder(f.section, f.year).some(name => name.toLowerCase().includes(query))
+                );
+            }
+
+            if (!filtered.length) {
+                filesContainer.innerHTML = '<p class="empty-note">No section folders yet. Create a student folder, add names, or scan sheets in the app and sync — scores will appear automatically under that section & school year.</p>';
+                return;
+            }
+
+            filesContainer.innerHTML = filtered.map((folder, idx) => {
+                const boys = getStudentNamesForFolder(folder.section, folder.year, 'boys');
+                const girls = getStudentNamesForFolder(folder.section, folder.year, 'girls');
+                const fileChips = folder.files.length
+                    ? folder.files.map(file =>
+                        `<span class="record-file" data-file-scope data-id="${file._id}">📄 ${escapeHtml(file.title)}<button class="print-record" data-print-id="${file._id}" data-print-section="${escapeHtml(folder.section || '')}" data-print-year="${escapeHtml(folder.year || '')}">PRINT</button></span>`
+                      ).join('')
+                    : '<span class="empty-note">No named file yet (scores auto-saved to this folder).</span>';
+
+                const makeStudentList = (names, gender) => names.length
+                    ? names.map((studentName) => `
+                        <li class="student-item">
+                            <span class="student-name">${escapeHtml(studentName)}</span>
+                            <span class="student-actions">
+                                <button type="button" class="student-print-btn" data-print-student-name="${escapeHtml(studentName)}" data-print-section="${escapeHtml(folder.section || '')}" data-print-year="${escapeHtml(folder.year || '')}">Print</button>
+                                <button type="button" class="student-delete-btn" data-delete-student data-student-name="${escapeHtml(studentName)}" data-gender="${gender}" data-section="${escapeHtml(folder.section || '')}" data-year="${escapeHtml(folder.year || '')}">Delete</button>
+                            </span>
+                        </li>
+                    `).join('')
+                    : '<li class="empty-note">No students yet.</li>';
+
+                return `
+                    <div class="folder" data-folder-index="${idx}">
+                        <div class="folder-header">
+                            <span class="folder-icon">📁</span>
+                            <span class="folder-name">${escapeHtml((folder.files[0] && folder.files[0].title) || folder.year || 'Unnamed Folder')}</span>
+                            ${folder.section && folder.section !== ((folder.files[0] && folder.files[0].title) || '') ? `<span class="folder-section">Section: ${escapeHtml(folder.section)}</span>` : ''}
+                            <button type="button" class="delete-folder-btn" data-delete-folder data-section="${escapeHtml(folder.section || '')}" data-year="${escapeHtml(folder.year || '')}">🗑️ Delete</button>
+                        </div>
+                        <div class="folder-body">
+                            <div style="margin-bottom:8px;">${fileChips}</div>
+                            <div class="student-roster">
+                                <div class="student-roster-toolbar">
+                                    <span class="student-roster-header" style="margin-bottom:0;">Student Names</span>
+                                    <button type="button" class="clear-student-names-btn" data-clear-student-names data-section="${escapeHtml(folder.section || '')}" data-year="${escapeHtml(folder.year || '')}">Clear All Names</button>
+                                </div>
+                                <div class="student-roster-header">Boys</div>
+                                <div class="student-row">
+                                    <textarea rows="3" placeholder="Boys: one student per line - Name - Section" data-add-student-input="boys"></textarea>
+                                    <button type="button" data-add-student data-gender="boys" data-section="${escapeHtml(folder.section || '')}" data-year="${escapeHtml(folder.year || '')}">Add Boys</button>
+                                </div>
+                                <ul class="student-list">${makeStudentList(boys, 'boys')}</ul>
+                                <div class="student-roster-header">Girls</div>
+                                <div class="student-row">
+                                    <textarea rows="3" placeholder="Girls: one student per line - Name - Section" data-add-student-input="girls"></textarea>
+                                    <button type="button" data-add-student data-gender="girls" data-section="${escapeHtml(folder.section || '')}" data-year="${escapeHtml(folder.year || '')}">Add Girls</button>
+                                </div>
+                                <ul class="student-list">${makeStudentList(girls, 'girls')}</ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Restore the folder that was open before the list was refreshed.
+            filesContainer.querySelectorAll('.folder').forEach((folderElement, idx) => {
+                const folder = filtered[idx];
+                if (folder && expandedFolderKey === folderKey(folder.section, folder.year)) {
+                    folderElement.querySelector('.folder-body').classList.add('open');
+                }
+            });
+
+            filesContainer.querySelectorAll('.folder-header').forEach(header => {
+                header.addEventListener('click', (e) => {
+                    if (e.target.closest('.print-record') || e.target.closest('[data-add-student]') || e.target.closest('.student-print-btn') || e.target.closest('[data-delete-folder]')) return;
+                    const body = header.closest('.folder').querySelector('.folder-body');
+                    body.classList.toggle('open');
+                    const folderIndex = Number(header.closest('.folder').dataset.folderIndex);
+                    const selectedFolder = filtered[folderIndex];
+                    expandedFolderKey = body.classList.contains('open') && selectedFolder
+                        ? folderKey(selectedFolder.section, selectedFolder.year)
+                        : null;
+                });
+            });
+
+            filesContainer.querySelectorAll('[data-delete-folder]').forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    event.stopPropagation();
+                    const section = button.dataset.section || '';
+                    const year = button.dataset.year || '';
+                    const name = `${section || 'No Section'} - ${year || 'No School Year'}`;
+                    if (!confirm(`Are you sure you want to delete the folder ${name}? All students inside this folder will also be deleted.`)) return;
+
+                    const key = folderKey(section, year);
+                    const filesToDelete = allFiles.filter(file => folderKey(file.section, file.academicYear) === key);
+                    const rosters = getStudentRosters();
+                    delete rosters[key];
+                    delete rosters[key + '::boys'];
+                    delete rosters[key + '::girls'];
+                    saveStudentRosters(rosters);
+                    allFiles = allFiles.filter(file => folderKey(file.section, file.academicYear) !== key);
+                    allScores = allScores.filter(score => folderKey(score.section, score.academicYear) !== key);
+                    saveStoredLocalArray(localRecordFilesKey, allFiles);
+                    saveStoredLocalArray(localScoresKey, allScores);
+                    await Promise.all(filesToDelete.map(file =>
+                        fetch(scanCheckApiUrl(`/api/record-files/${encodeURIComponent(file._id)}`), { method: 'DELETE' }).catch(() => null)
+                    ));
+                    await fetch(scanCheckApiUrl('/api/scores/folder'), {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ section, academicYear: year })
+                    }).catch(() => null);
+                    renderFolders();
+                });
+            });
+
+            filesContainer.querySelectorAll('.print-record').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.printId;
+                    const section = btn.dataset.printSection || '';
+                    const year = btn.dataset.printYear || '';
+                    const names = [
+                        ...getStudentNamesForFolder(section, year, 'boys'),
+                        ...getStudentNamesForFolder(section, year, 'girls')
+                    ];
+                    const uniqueNames = [...new Set(names)];
+                    const params = new URLSearchParams({ recordFileId: id, section, academicYear: year, paper: 'short' });
+                    params.set('students', JSON.stringify(uniqueNames.map(student => {
+                        const parts = student.split(/\s+-\s+/);
+                        return { name: parts[0].trim(), section: (parts.slice(1).join(' - ') || section).trim() };
+                    })));
+                    window.open(scanCheckApiUrl(`/omr-sheet?${params}`), '_blank', 'noopener');
+                });
+            });
+
+
+            filesContainer.querySelectorAll('.record-file').forEach(fileChip => {
+                const id = fileChip.dataset.id;
+                const btn = document.createElement('button');
+                btn.className = 'delete-file-btn';
+                btn.type = 'button';
+                btn.textContent = 'DELETE';
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (!confirm('Delete this file. This cannot be undone.')) return;
+                    try {
+                        const response = await fetch(scanCheckApiUrl(`/api/record-files/${encodeURIComponent(id)}`), { method: 'DELETE' });
+                        if (!response.ok) throw new Error();
+                    } catch {
+                        saveStoredLocalArray(localRecordFilesKey, getStoredLocalArray(localRecordFilesKey).filter(file => file._id !== id));
+                    }
+                    allFiles = allFiles.filter(file => file._id !== id);
+                    renderFolders();
+                });
+                fileChip.appendChild(btn);
+            });
+
+            filesContainer.querySelectorAll('[data-add-student]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const section = btn.dataset.section || '';
+                    const year = btn.dataset.year || '';
+                    const gender = btn.dataset.gender || 'boys';
+                    const roster = btn.closest('.student-roster');
+                    const input = roster.querySelector(`[data-add-student-input="${gender}"]`);
+                    const value = (input && input.value || '').trim();
+                    if (!value) {
+                        input.focus();
+                        return;
+                    }
+                    value.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
+                        .forEach(student => addStudentNameToFolder(section, year, student, gender));
+                    renderFolders();
+                });
+            });
+
+            filesContainer.querySelectorAll('[data-clear-student-names]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const section = btn.dataset.section || '';
+                    const year = btn.dataset.year || '';
+                    const boys = getStudentNamesForFolder(section, year, 'boys');
+                    const girls = getStudentNamesForFolder(section, year, 'girls');
+                    const total = boys.length + girls.length;
+                    if (!total) {
+                        alert('Walang pangalan na kailangang burahin sa folder na ito.');
+                        return;
+                    }
+                    if (!confirm(`Are you sure you want to delete all ${total} names from this folder's Boys and Girls lists? This action cannot be undone.`)) return;
+
+                    const rosters = getStudentRosters();
+                    const key = folderKey(section, year);
+                    delete rosters[key];
+                    delete rosters[key + '::boys'];
+                    delete rosters[key + '::girls'];
+                    saveStudentRosters(rosters);
+                    renderFolders();
+                });
+            });
+
+            filesContainer.querySelectorAll('.student-print-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const studentName = btn.dataset.printStudentName || '';
+                    const section = btn.dataset.printSection || '';
+                    const year = btn.dataset.printYear || '';
+                    window.open(scanCheckApiUrl(`/omr-sheet?${new URLSearchParams({ studentName, section, academicYear: year })}`), '_blank', 'noopener');
+                });
+            });
+
+            filesContainer.querySelectorAll('[data-delete-student]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const studentName = btn.dataset.studentName || '';
+                    if (!confirm(`Burahin si ${studentName} sa student list.`)) return;
+                    const section = btn.dataset.section || '';
+                    const year = btn.dataset.year || '';
+                    const gender = btn.dataset.gender || 'boys';
+                    const rosters = getStudentRosters();
+                    const key = folderKey(section, year) + '::' + gender;
+                    rosters[key] = (Array.isArray(rosters[key]) ? rosters[key] : [])
+                        .filter(name => name !== studentName);
+                    // Remove names saved by the older single-list format too.
+                    const legacyKey = folderKey(section, year);
+                    if (gender === 'boys' && Array.isArray(rosters[legacyKey])) {
+                        rosters[legacyKey] = rosters[legacyKey].filter(name => name !== studentName);
+                    }
+                    saveStudentRosters(rosters);
+                    renderFolders();
+                });
+            });
+        }
+
+        function setExcelImportStatus(message, type = '') {
+            excelImportStatus.textContent = message;
+            excelImportStatus.className = `upload-status${type ? ` ${type}` : ''}`;
+        }
+
+        async function loadFiles() {
+            try {
+                const response = await fetch(scanCheckApiUrl('/api/record-files'), { cache: 'no-store' });
+                if (!response.ok) throw new Error();
+                allFiles = await response.json();
+                saveStoredLocalArray(localRecordFilesKey, allFiles);
+            } catch {
+                allFiles = getStoredLocalArray(localRecordFilesKey);
+            }
+            renderFolders();
+        }
+
+        async function loadScores() {
+            try {
+                const response = await fetch(scanCheckApiUrl('/api/scores'), { cache: 'no-store' });
+                if (!response.ok) throw new Error();
+                allScores = await response.json();
+                saveStoredLocalArray(localScoresKey, allScores);
+            } catch {
+                allScores = getStoredLocalArray(localScoresKey);
+            }
+            renderFolders();
+        }
+
+        async function refreshAll() {
+            await Promise.all([loadFiles(), loadScores()]);
+            renderFolders();
+        }
+
+        fileForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const body = {
+                title: document.getElementById('recordTitle').value.trim(),
+                // Internal key keeps folders with the same school year separate.
+                section: document.getElementById('recordTitle').value.trim(),
+                academicYear: document.getElementById('recordYear').value.trim()
+            };
+            if (!body.title || !body.academicYear) {
+                alert('Please complete the folder name and school year.');
+                return;
+            }
+
+            const localFolder = {
+                _id: `local-${Date.now()}`,
+                title: body.title,
+                section: body.section,
+                academicYear: body.academicYear,
+                createdAt: new Date().toISOString()
+            };
+
+            const existingLocal = getStoredLocalArray(localRecordFilesKey);
+            const hasDuplicate = existingLocal.some(file =>
+                (file.title || '').toLowerCase() === body.title.toLowerCase() &&
+                (file.section || '').toLowerCase() === body.section.toLowerCase() &&
+                (file.academicYear || '').toLowerCase() === body.academicYear.toLowerCase()
+            );
+
+            if (!hasDuplicate) {
+                saveStoredLocalArray(localRecordFilesKey, [...existingLocal, localFolder]);
+            }
+
+            try {
+                const response = await fetch(scanCheckApiUrl('/api/record-files'), { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+                if (!response.ok) {
+                    allFiles = getStoredLocalArray(localRecordFilesKey);
+                    renderFolders();
+                    fileForm.reset();
+                    fileForm.style.display = 'none';
+                    return;
+                }
+            } catch {
+                allFiles = getStoredLocalArray(localRecordFilesKey);
+                renderFolders();
+                fileForm.reset();
+                fileForm.style.display = 'none';
+                return;
+            }
+
+            saveStudentRosters({ ...getStudentRosters(), [folderKey(body.section, body.academicYear)]: getStudentNamesForFolder(body.section, body.academicYear) });
+            fileForm.reset();
+            fileForm.style.display = 'none';
+            refreshAll();
+        });
+
+        searchBar.addEventListener('input', renderFolders);
+
+        function parseExcelStudentNames(workbook, fallbackGender) {
+            const worksheets = Array.isArray(workbook) && workbook.length && Array.isArray(workbook[0] && workbook[0].data)
+                ? workbook
+                : [{ sheet: '', data: workbook }];
+            if (!worksheets.some(sheet => Array.isArray(sheet.data) && sheet.data.length)) {
+                throw new Error('The first worksheet is empty.');
+            }
+
+            const normalizeHeader = value => String(value || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            const getGenderColumnType = value => {
+                const header = normalizeHeader(value);
+                if (header.includes('girl') || header.includes('female') || header.includes('feminine') || header.includes('babae')) return 'girls';
+                if (header.includes('boy') || header.includes('male') || header.includes('masculine') || header.includes('lalaki')) return 'boys';
+                return '';
+            };
+            const getGenderValueType = value => {
+                const normalized = normalizeHeader(value);
+                if (['boy', 'boys', 'male', 'm', 'lalaki'].includes(normalized)) return 'boys';
+                if (['girl', 'girls', 'female', 'f', 'babae'].includes(normalized)) return 'girls';
+                return '';
+            };
+            const nameHeaders = new Set(['name', 'names', 'studentname', 'studentnames', 'fullname', 'studentfullname']);
+            const genderHeaders = new Set(['gender', 'sex', 'studentgender', 'studentsex']);
+            const importedNames = { boys: [], girls: [] };
+
+            worksheets.forEach(worksheet => {
+                const rows = worksheet.data;
+                if (!Array.isArray(rows) || !rows.length) return;
+                const candidateHeaderRows = rows.slice(0, 10)
+                    .map((row, index) => ({ row, index }))
+                    .filter(item => Array.isArray(item.row));
+                const headerRowIndex = (
+                    candidateHeaderRows.find(({ row }) => {
+                        const hasName = row.some(cell => nameHeaders.has(normalizeHeader(cell)));
+                        const hasGender = row.some(cell => genderHeaders.has(normalizeHeader(cell)));
+                        const hasBoys = row.some(cell => getGenderColumnType(cell) === 'boys');
+                        const hasGirls = row.some(cell => getGenderColumnType(cell) === 'girls');
+                        return (hasName && hasGender) || (hasBoys && hasGirls);
+                    }) ||
+                    candidateHeaderRows.find(({ row }) => row.some(cell => nameHeaders.has(normalizeHeader(cell)))) ||
+                    candidateHeaderRows.find(({ row }) => row.some(cell => getGenderColumnType(cell)))
+                )?.index ?? -1;
+                const headerRow = headerRowIndex >= 0 ? rows[headerRowIndex] : [];
+                const boysColumn = headerRow.findIndex(cell => getGenderColumnType(cell) === 'boys');
+                const girlsColumn = headerRow.findIndex(cell => getGenderColumnType(cell) === 'girls');
+                const nameColumn = headerRow.findIndex(cell => nameHeaders.has(normalizeHeader(cell)));
+                const genderColumn = headerRow.findIndex(cell => genderHeaders.has(normalizeHeader(cell)));
+                const firstDataRow = headerRowIndex >= 0 ? headerRowIndex + 1 : 0;
+                const sheetGender = normalizeHeader(worksheet.sheet);
+                const sheetGenderType = getGenderColumnType(sheetGender);
+
+                if (boysColumn >= 0 || girlsColumn >= 0) {
+                    rows.slice(firstDataRow).forEach(row => {
+                        if (!Array.isArray(row)) return;
+                        const boyName = boysColumn >= 0 ? String(row[boysColumn] ?? '').trim() : '';
+                        const girlName = girlsColumn >= 0 ? String(row[girlsColumn] ?? '').trim() : '';
+                        if (boyName) importedNames.boys.push(boyName);
+                        if (girlName) importedNames.girls.push(girlName);
+                    });
+                    return;
+                }
+
+                if (nameColumn >= 0 && genderColumn >= 0) {
+                    rows.slice(firstDataRow).forEach(row => {
+                        if (!Array.isArray(row)) return;
+                        const name = String(row[nameColumn] ?? '').trim();
+                        const value = getGenderValueType(row[genderColumn]);
+                        if (!name) return;
+                        if (value) importedNames[value].push(name);
+                    });
+                    return;
+                }
+
+                if (sheetGenderType) {
+                    const column = nameColumn >= 0 ? nameColumn : 0;
+                    const sheetDataStart = nameColumn >= 0 && headerRowIndex >= 0 ? firstDataRow : 0;
+                    rows.slice(sheetDataStart).forEach(row => {
+                        const name = Array.isArray(row) ? String(row[column] ?? '').trim() : '';
+                        if (name) importedNames[sheetGenderType].push(name);
+                    });
+                    return;
+                }
+
+                const column = nameColumn >= 0 ? nameColumn : 0;
+                const nameDataStart = nameColumn >= 0 && headerRowIndex >= 0 ? firstDataRow : 0;
+                rows.slice(nameDataStart).forEach(row => {
+                    const name = Array.isArray(row) ? String(row[column] ?? '').trim() : '';
+                    if (!name) return;
+                    if (fallbackGender === 'both') {
+                        importedNames.boys.push(name);
+                        importedNames.girls.push(name);
+                    } else {
+                        importedNames[fallbackGender].push(name);
+                    }
+                });
+            });
+
+            if (!importedNames.boys.length && !importedNames.girls.length) {
+                throw new Error('No names were found. Check the selected column or gender headers.');
+            }
+
+            return importedNames;
+        }
+
+        excelImportForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const file = excelFileInput.files[0];
+            const selectedFolder = groupByFolders().find(folder =>
+                folderKey(folder.section, folder.year) === excelFolderSelect.value
+            );
+            const gender = excelGenderSelect.value;
+
+            if (!file) {
+                setExcelImportStatus('Choose an Excel or Word student list.', 'error');
+                return;
+            }
+
+            if (!/\.(xlsx|docx)$/i.test(file.name)) {
+                setExcelImportStatus('Choose a valid .xlsx or .docx file.', 'error');
+                return;
+            }
+
+            if (file.size > maxExcelFileSize) {
+                setExcelImportStatus('The Excel file is too large. Maximum file size is 8 MB.', 'error');
+                return;
+            }
+
+            if (/\.docx$/i.test(file.name)) {
+                excelImportButton.disabled = true;
+                setExcelImportStatus('Binabasa ang Word student list...');
+                try {
+                    if (typeof window.mammoth === 'undefined') throw new Error('Hindi nag-load ang Word reader. I-restart ang server at i-refresh ang page.');
+                    const parsed = parseDocxStudentList((await window.mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() })).value);
+                    let added = 0, strands = 0;
+                    for (const [section, names] of parsed) {
+                        const year = 'Grade 12';
+                        await ensureDocxFolder(section, year);
+                        added += addStudentNamesToFolder(section, year, names.boys, 'boys');
+                        added += addStudentNamesToFolder(section, year, names.girls, 'girls');
+                        strands++;
+                    }
+                    renderFolders();
+                    excelImportForm.reset();
+                    setExcelImportStatus(`${added} pangalan mula sa ${strands} strand folder ang na-import.`, 'success');
+                } catch (err) {
+                    setExcelImportStatus(err.message || 'Hindi mabasa ang Word file.', 'error');
+                } finally {
+                    excelImportButton.disabled = false;
+                }
+                return;
+            }
+
+            if (typeof window.readXlsxFile !== 'function') {
+                setExcelImportStatus('The Excel reader did not load. Refresh the page and try again.', 'error');
+                return;
+            }
+
+            excelImportButton.disabled = true;
+            setExcelImportStatus('Reading Excel names...');
+            try {
+                const importedNames = parseExcelStudentNames(await window.readXlsxFile(file), 'boys');
+                const section = file.name.replace(/\.xlsx$/i, '').trim() || 'Imported Students';
+                const year = 'Grade 12';
+                await ensureDocxFolder(section, year);
+
+                const addedBoys = importedNames.boys.length
+                    ? addStudentNamesToFolder(section, year, importedNames.boys, 'boys')
+                    : 0;
+                const addedGirls = importedNames.girls.length
+                    ? addStudentNamesToFolder(section, year, importedNames.girls, 'girls')
+                    : 0;
+                const totalAdded = addedBoys + addedGirls;
+                const totalSkipped = Object.values(importedNames)
+                    .reduce((total, names) => total + names.length, 0) - totalAdded;
+                renderFolders();
+                excelImportForm.reset();
+                const genderCounts = [
+                    addedBoys ? `${addedBoys} Boys` : '',
+                    addedGirls ? `${addedGirls} Girls` : ''
+                ].filter(Boolean).join(' and ');
+                setExcelImportStatus(`${totalAdded} name${totalAdded === 1 ? '' : 's'} added${genderCounts ? ` (${genderCounts})` : ''} to ${section} - ${year}.${totalSkipped ? ` ${totalSkipped} duplicate name${totalSkipped === 1 ? '' : 's'} skipped.` : ''}`, 'success');
+            } catch (err) {
+                setExcelImportStatus(err.message || 'Unable to read this Excel file. Please check the file and try again.', 'error');
+            } finally {
+                excelImportButton.disabled = false;
+            }
+        });
+
+        function parseDocxStudentList(html) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const lines = Array.from(doc.body.querySelectorAll('h1, h2, h3, h4, p, li, td, th'))
+                .map(node => node.textContent.replace(/\s+/g, ' ').trim())
+                .filter(Boolean);
+            const result = new Map();
+            let strand = '';
+            let gender = '';
+            lines.forEach(line => {
+                const normalized = line.replace(/[\u2013\u2014]/g, '-').trim();
+                const genderMatch = normalized.match(/^(male|female)$/i);
+                if (genderMatch) { gender = genderMatch[1].toLowerCase() === 'male' ? 'boys' : 'girls'; return; }
+                if (/^grade\s*12\b/i.test(normalized)) {
+                    strand = normalized.replace(/^grade\s*12\s*[-\s:]*/i, '').trim();
+                    gender = '';
+                    if (!result.has(strand)) result.set(strand, { boys: [], girls: [] });
+                    return;
+                }
+                if (/^grade\s*12\s*[-–—]/i.test(normalized)) {
+                    strand = normalized.replace(/^grade\s*12\s*[-–—]\s*/i, '').trim();
+                    gender = '';
+                    if (!result.has(strand)) result.set(strand, { boys: [], girls: [] });
+                    return;
+                }
+                const name = normalized.replace(/^\s*\d+[.)]\s*/, '').trim();
+                if (strand && gender && name && !/^grade\s*12\b/i.test(name)) result.get(strand)[gender].push(name);
+            });
+            if (![...result.values()].some(group => group.boys.length || group.girls.length)) throw new Error('Walang nakitang strand, MALE/FEMALE heading, at pangalan sa Word file.');
+            return result;
+        }
+
+        async function ensureDocxFolder(section, year) {
+            let folder = groupByFolders().find(item => folderKey(item.section, item.year) === folderKey(section, year));
+            if (folder) return folder;
+            const body = { title: section, section, academicYear: year };
+            const localFolder = { _id: `local-${Date.now()}-${Math.random()}`, ...body, createdAt: new Date().toISOString() };
+            const locals = getStoredLocalArray(localRecordFilesKey);
+            saveStoredLocalArray(localRecordFilesKey, [...locals, localFolder]);
+            try {
+                const response = await fetch(scanCheckApiUrl('/api/record-files'), { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+                if (response.ok) { const saved = await response.json(); allFiles.push(saved); return saved; }
+            } catch {}
+            allFiles.push(localFolder);
+            return localFolder;
+        }
+
+        // Load files + scores, and auto-refresh every second so new app syncs show up quickly.
+        refreshAll();
+        let refreshInProgress = false;
+        setInterval(async () => {
+            if (refreshInProgress) return;
+            // Do not re-render while the user is typing a student name;
+            // re-rendering replaces the textarea and loses the input.
+            const active = document.activeElement;
+            if (active && active.matches('[data-add-student-input]')) return;
+            refreshInProgress = true;
+            try { await refreshAll(); } finally { refreshInProgress = false; }
+        }, 1000);
+    </script>
+</body>
+</html>

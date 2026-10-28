@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TestSync Official OMR Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f4f5f7; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+    .print-controls {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+      gap: 15px; padding: 20px; background: #fff; border-bottom: 4px solid #800000;
+      position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .group { display: flex; flex-direction: column; gap: 4px; }
+    .quarter-students { display: contents; }
+    .quarter-students[hidden] { display: none; }
+    .print-controls label { font-weight: bold; font-size: 11px; color: #800000; text-transform: uppercase; }
+    .print-controls input, .print-controls select, .print-controls button {
+      height: 38px; border: 1px solid #ccc; border-radius: 6px; padding: 0 10px; font: inherit;
+    }
+    .input-num { width: 65px; text-align: center; font-weight: bold; }
+    .print-controls button { background: #800000; color: #fff; border: none; cursor: pointer; font-weight: bold; padding: 0 25px; transition: 0.2s; }
+    .print-controls button:hover { background: #a51d22; transform: translateY(-2px); }
+
+    #printArea {
+      display: grid;
+      margin: 20px auto;
+      background: #eee; /* Light gray background to see sheets clearly */
+      width: 216mm;
+    }
+    .short { height: 279mm; } .long { height: 330mm; } .a4 { width: 210mm; height: 297mm; }
+
+    /* Give every selected sheet its real physical paper size.  Without this,
+       browsers normally print using the printer's default (often A4/Letter)
+       and split a Long Bond quarter sheet across two pages. */
+    @page short-sheet { size: 216mm 279mm; margin: 0; }
+    @page long-sheet  { size: 216mm 330mm; margin: 0; }
+    @page a4-sheet    { size: 210mm 297mm; margin: 0; }
+    #printArea.short { page: short-sheet; }
+    #printArea.long  { page: long-sheet; }
+    #printArea.a4    { page: a4-sheet; }
+
+    /* True 2x2 Grid for Quarter Mode */
+    .mode-quarter {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      padding: 2mm;
+      gap: 2mm;
+      align-items: stretch;
+      overflow: hidden;
+    }
+    .mode-quarter svg { width: 100%; height: 100%; min-width: 0; min-height: 0; }
+    .multi-page { display: block !important; height: auto !important; }
+    .print-page { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; width: 216mm; height: 279mm; gap: 2mm; padding: 2mm; overflow: hidden; box-sizing: border-box; break-after: page; page-break-after: always; break-inside: avoid; page-break-inside: avoid; }
+    .multi-page.long .print-page { width: 216mm; height: 330mm; }
+    .multi-page.a4 .print-page { width: 210mm; height: 297mm; }
+    .print-page:last-child { break-after: auto; page-break-after: auto; }
+    .mode-whole { grid-template-columns: 1fr; grid-template-rows: 1fr; padding: 8mm; }
+
+    .q-img { image-rendering: crisp-edges; shape-rendering: crispEdges; }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    @media print {
+      body { background: #fff; }
+      .print-controls { display: none; }
+      #printArea { margin: 0; border: none; padding: 2mm; gap: 2mm; background: #fff; overflow: hidden; }
+      #printArea.mode-quarter { break-after: page; page-break-after: always; break-inside: avoid; page-break-inside: avoid; }
+      #printArea.multi-page .print-page { break-before: page; break-after: page; page-break-before: always; page-break-after: always; }
+      #printArea.multi-page .print-page:first-child { break-before: auto; page-break-before: auto; }
+      #printArea.multi-page.mode-quarter { break-after: auto !important; page-break-after: auto !important; }
+      #printArea.multi-page { margin: 0 !important; padding: 0 !important; gap: 0 !important; }
+      #printArea.multi-page .print-page { width: 216mm !important; height: 279mm !important; overflow: hidden; }
+      #printArea.multi-page.long .print-page { height: 330mm !important; }
+      #printArea.multi-page.a4 .print-page { width: 210mm !important; height: 297mm !important; }
+      svg { box-shadow: none; border: 0.1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="print-controls">
+<div class="quarter-students">
+  <div class="group"><label>Quarter 1 Name</label><input id="quarterName1" type="text" placeholder="Student name" oninput="render()"></div>
+  <div class="group"><label>Quarter 1 Section</label><input id="quarterSection1" type="text" placeholder="Section" oninput="render()"></div>
+  <div class="group"><label>Quarter 2 Name</label><input id="quarterName2" type="text" placeholder="Student name" oninput="render()"></div>
+  <div class="group"><label>Quarter 2 Section</label><input id="quarterSection2" type="text" placeholder="Section" oninput="render()"></div>
+  <div class="group"><label>Quarter 3 Name</label><input id="quarterName3" type="text" placeholder="Student name" oninput="render()"></div>
+  <div class="group"><label>Quarter 3 Section</label><input id="quarterSection3" type="text" placeholder="Section" oninput="render()"></div>
+  <div class="group"><label>Quarter 4 Name</label><input id="quarterName4" type="text" placeholder="Student name" oninput="render()"></div>
+  <div class="group"><label>Quarter 4 Section</label><input id="quarterSection4" type="text" placeholder="Section" oninput="render()"></div>
+</div>
+
+<div class="group"><label>MC (A-E)</label><input id="mc" class="input-num" type="number" min="0" max="60" value="20" oninput="render(this)"></div>
+<div class="group"><label>T/F</label><input id="tf" class="input-num" type="number" min="0" max="60" value="10" oninput="render(this)"></div>
+<div class="group"><label>Y/N</label><input id="yn" class="input-num" type="number" min="0" max="60" value="0" oninput="render(this)"></div>
+<div class="group"><label>1st Type</label><select id="typeOrder1" onchange="changeTypeOrder(this)"><option value="MC" selected>Multiple Choice</option><option value="TF">True / False</option><option value="YN">Yes / No</option></select></div>
+<div class="group"><label>2nd Type</label><select id="typeOrder2" onchange="changeTypeOrder(this)"><option value="TF" selected>True / False</option><option value="MC">Multiple Choice</option><option value="YN">Yes / No</option></select></div>
+<div class="group"><label>3rd Type</label><select id="typeOrder3" onchange="changeTypeOrder(this)"><option value="YN" selected>Yes / No</option><option value="MC">Multiple Choice</option><option value="TF">True / False</option></select></div>
+  <div class="group"><label>Start #</label><input id="startNum" class="input-num" type="number" value="1" oninput="render()"></div>
+
+  <div class="group"><label>Layout Mode</label>
+    <select id="layoutMode" onchange="updateItems(); render();">
+      <option value="quarter" selected>4-in-1 (Quarter - Max 60)</option>
+    </select>
+  </div>
+
+  <div class="group"><label>Bond Paper</label>
+    <select id="paperSize" onchange="changePaperSize(this.value)">
+      <option value="short">Short Bond</option><option value="long">Long Bond</option><option value="a4">A4</option>
+    </select>
+  </div>
+
+  <div class="group"><label>Total (Max 60)</label><div id="totalBadge" style="font-weight:bold; color:#800000; font-size:16px;">0/60</div></div>
+  <button onclick="window.print()">PRINT</button>
+</div>
+
+<div id="printArea"></div>
+
+<template id="sheetTemplate">
+  <svg viewBox="0 0 1000 1300">
+    <rect width="1000" height="1300" fill="#fff"/>
+    <rect class="border-rect" x="15" y="15" width="970" height="1270" fill="none" stroke="#000" stroke-width="4"/>
+    <g fill="#000">
+      <rect class="tl" x="35" y="35" width="45" height="45"/><rect class="tr" x="920" y="35" width="45" height="45"/>
+      <rect class="bl" x="35" y="1220" width="45" height="45"/><rect class="br" x="920" y="1220" width="45" height="45"/>
+    </g>
+    <g font-family="Arial, sans-serif" fill="#000">
+      <text class="t-tag" x="100" y="85" font-size="20" font-weight="bold" fill="#800000">TESTSYNC SYSTEM</text>
+      <text class="t-name" x="100" y="140" font-size="30" font-weight="bold">NAME: </text>
+      <text class="t-section" x="100" y="190" font-size="20">SECTION: </text>
+      <text class="t-instruction-1" x="120" y="245" font-size="20">Directions: Use a pencil (Mongol No. 2) or a black pen,</text>
+      <text class="t-instruction-2" x="120" y="268" font-size="20">completely fill in the circle corresponding to your chosen answer.</text>
+      <circle class="t-warning-marker" cx="140" cy="286" r="8" fill="#d00000"/>
+      <text class="t-warning" x="150" y="302" font-size="20" font-weight="bold" fill="#d00000">INCORRECT: Multiple answers or marks detected (✔), (✖), (◕), or (—).</text>
+      <text class="t-warning-2" x="150" y="326" font-size="20" font-weight="bold" fill="#d00000">Fully shade only one bubble per question.</text>
+      <line x1="80" y1="230" x2="920" y2="230" stroke="#000" stroke-width="3"/>
+    </g>
+    <image class="q-img" x="695" y="45" width="215" height="215"/>
+    <g class="b-grid"></g>
+  </svg>
+</template>
+
+<script src="api.js"></script>
+<script>
+  const SIZES = {
+    'short': { h: 1292 },
+    'long': { h: 1527 },
+    'a4': { h: 1414 }
+  };
+  const qrOptions = { errorCorrectionLevel: 'M', margin: 0, width: 2400 };
+  let headerPos = { nameX: 80, nameY: 140, sectX: 80, sectY: 200, qrX: 700, qrY: 50 };
+  let currentNameSize = 30;
+  let currentSectSize = 20;
+  let currentBubbleRad = 11;
+
+  function buildQrApiUrls() {
+    return [window.scanCheckApiBase];
+  }
+
+  async function generateQrDataUrl(payload) {
+    const json = JSON.stringify(payload);
+
+    // SVG keeps the QR modules sharp when the printed sheet is scaled.
+    if (typeof QRCode !== 'undefined' && typeof QRCode.toString === 'function') {
+      return await new Promise((resolve, reject) => {
+        QRCode.toString(json, { errorCorrectionLevel: 'M', margin: 0, type: 'svg' }, (err, svg) => {
+          if (err) reject(err);
+          else resolve(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
+        });
+      });
+    }
+
+    if (typeof QRCode !== 'undefined' && typeof QRCode.toDataURL === 'function') {
+      return await new Promise((resolve, reject) => {
+        QRCode.toDataURL(json, { ...qrOptions, width: 1200 }, (err, url) => {
+          if (err) reject(err);
+          else resolve(url);
+        });
+      });
+    }
+
+    const urlParams = new URLSearchParams({ data: json });
+    const candidates = buildQrApiUrls();
+    let lastError = null;
+
+    for (const baseUrl of candidates) {
+      try {
+        const response = await fetch(`${baseUrl}/api/qr?${urlParams.toString()}`, { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`QR API returned ${response.status}`);
+        }
+        const svgText = await response.text();
+        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError || new Error('Unable to generate QR code.');
+  }
+
+  function updateItems() {
+    const mode = document.getElementById('layoutMode').value;
+    const mc = document.getElementById('mc'); const tf = document.getElementById('tf'); const yn = document.getElementById('yn');
+
+    if(mode === 'quarter') {
+      mc.value = 30; tf.value = 30; yn.value = 0;
+      currentNameSize = 20; currentSectSize = 15; currentBubbleRad = 11;
+    }
+    else {
+      mc.value = 30; tf.value = 15; yn.value = 15;
+      currentNameSize = 30; currentSectSize = 20; currentBubbleRad = 11;
+    }
+    render();
+  }
+
+  const typeOrderSelects = [1, 2, 3].map((position) => document.getElementById(`typeOrder${position}`));
+  typeOrderSelects.forEach((select) => {
+    select.dataset.previousValue = select.value;
+  });
+
+  function getTypeOrder() {
+    return typeOrderSelects.map((select) => select.value);
+  }
+
+  function setTypeOrder(order) {
+    const uniqueOrder = [...new Set(order.filter((type) => ['MC', 'TF', 'YN'].includes(type)))];
+    ['MC', 'TF', 'YN'].forEach((type) => {
+      if (!uniqueOrder.includes(type)) uniqueOrder.push(type);
+    });
+    typeOrderSelects.forEach((select, index) => {
+      select.value = uniqueOrder[index];
+      select.dataset.previousValue = select.value;
+    });
+  }
+
+  function changeTypeOrder(changedSelect) {
+    const duplicate = typeOrderSelects.find((select) =>
+      select !== changedSelect && select.value === changedSelect.value
+    );
+    if (duplicate) duplicate.value = changedSelect.dataset.previousValue;
+    typeOrderSelects.forEach((select) => {
+      select.dataset.previousValue = select.value;
+    });
+    render();
+  }
+
+  function normalizeItemCounts(changedInput) {
+    const inputs = ['mc', 'tf', 'yn'].map((id) => document.getElementById(id));
+    if (changedInput) {
+      const otherTotal = inputs
+        .filter((input) => input !== changedInput)
+        .reduce((total, input) => total + Math.max(0, parseInt(input.value, 10) || 0), 0);
+      const count = Math.max(0, parseInt(changedInput.value, 10) || 0);
+      changedInput.value = Math.min(count, 60, Math.max(0, 60 - otherTotal));
+    } else {
+      let remaining = 60;
+      inputs.forEach((input) => {
+        const count = Math.max(0, parseInt(input.value, 10) || 0);
+        input.value = Math.min(count, remaining);
+        remaining -= Number(input.value);
+      });
+    }
+    return inputs.reduce((total, input) => total + Math.max(0, parseInt(input.value, 10) || 0), 0);
+  }
+
+  let typeOrderInitialized = false;
+
+  function applyStudentQueryDefaults() {
+    const params = new URLSearchParams(window.location.search);
+    const studentName = params.get('studentName');
+    const section = params.get('section');
+    let students = [];
+    try { students = JSON.parse(params.get('students') || '[]'); } catch {}
+
+    // A quiz print uses the exact MC/T-F/Y-N counts from its answer key.
+    ['mc', 'tf', 'yn'].forEach((id) => {
+      const value = params.get(id);
+      const field = document.getElementById(id);
+      if (field && value !== null && /^\d+$/.test(value)) field.value = value;
+    });
+    if (!typeOrderInitialized) {
+      const requestedOrder = (params.get('typeOrder') || '')
+        .split(',')
+        .filter((type) => ['MC', 'TF', 'YN'].includes(type));
+      if (requestedOrder.length) setTypeOrder(requestedOrder);
+      typeOrderInitialized = true;
+    }
+
+    // Populate the first four slots even when the Home roster has 1–4 names.
+    if (Array.isArray(students) && students.length) {
+      for (let i = 1; i <= 4; i++) {
+        const student = students[i - 1] || {};
+        const nameInput = document.getElementById(`quarterName${i}`);
+        const sectInput = document.getElementById(`quarterSection${i}`);
+        if (nameInput && !nameInput.value.trim()) nameInput.value = student.name || '';
+        if (sectInput && !sectInput.value.trim()) sectInput.value = student.section || '';
+      }
+      return;
+    }
+
+    if (!studentName && !section) return;
+
+    const nameField = document.getElementById('name');
+    if (nameField && studentName && !nameField.value.trim()) nameField.value = studentName;
+
+    const sectionField = document.getElementById('section');
+    if (sectionField && section && !sectionField.value.trim()) sectionField.value = section;
+
+    // A folder print sends up to four students, one for each quarter slot.
+    let hasQuarterStudents = false;
+    for (let i = 1; i <= 4; i++) {
+      const name = params.get(`quarterName${i}`);
+      const sect = params.get(`quarterSection${i}`);
+      const nameInput = document.getElementById(`quarterName${i}`);
+      const sectInput = document.getElementById(`quarterSection${i}`);
+      if (name) { nameInput.value = name; hasQuarterStudents = true; }
+      if (sect) sectInput.value = sect;
+    }
+    if (hasQuarterStudents) return;
+
+    // A student opened from the dashboard belongs to one quarter only.
+    const quarterName = document.getElementById('quarterName1');
+    const quarterSection = document.getElementById('quarterSection1');
+    if (quarterName && studentName && !quarterName.value.trim()) quarterName.value = studentName;
+    if (quarterSection && section && !quarterSection.value.trim()) quarterSection.value = section;
+  }
+
+  function renderSingle() {
+    const modeEl = document.getElementById('layoutMode');
+    const mode = modeEl.value === 'whole' ? 'quarter' : (modeEl.value || 'quarter');
+    if (modeEl.value !== 'quarter') modeEl.value = 'quarter';
+    const isQuarter = mode === 'quarter';
+    document.querySelector('.quarter-students').hidden = !isQuarter;
+    applyStudentQueryDefaults();
+    normalizeItemCounts();
+    const paperKey = document.getElementById('paperSize').value;
+    const mc = parseInt(document.getElementById('mc').value) || 0;
+    const tf = parseInt(document.getElementById('tf').value) || 0;
+    const yn = parseInt(document.getElementById('yn').value) || 0;
+    const wholeName = document.getElementById('name')?.value || 'STUDENT NAME';
+    const wholeSection = document.getElementById('section')?.value || 'SECTION';
+    const startNum = parseInt(document.getElementById('startNum').value) || 1;
+    const nameFontSize = currentNameSize;
+    const sectFontSize = currentSectSize;
+    const bubbleRadius = currentBubbleRad;
+    const questionNumberSize = Math.max(10, Math.round(bubbleRadius * 1.4));
+
+    const choicesByType = { MC: ['A', 'B', 'C', 'D', 'E'], TF: ['T', 'F'], YN: ['Y', 'N'] };
+    const countByType = { MC: mc, TF: tf, YN: yn };
+    const allQ = [];
+    getTypeOrder().forEach((type) => {
+      for (let i = 0; i < countByType[type]; i++) allQ.push(choicesByType[type]);
+    });
+
+    let modeCfg = {
+      itemsPerCol: 25, startY: 275, maxYGap: 130, dyHeader: 0,
+      stepYMult: 3.1, startX: 90, endX: 910, label: "WHOLE PAPER", count: 1, qrSize: 180
+    };
+
+    if (mode === 'quarter') {
+      modeCfg = {
+        itemsPerCol: 25,
+        startY: 350,
+        maxYGap: 70,
+        dyHeader: -10,
+        stepYMult: 2.9,
+        startX: 150,
+        endX: 920,
+        label: "1/4 QUARTER",
+        count: 4,
+        qrSize: 180
+      };
+    }
+    else if (mode === 'whole') {
+      const items = (tf > 0 || yn > 0) ? 20 : 25;
+      modeCfg = { itemsPerCol: items, startY: 325, maxYGap: 130, dyHeader: 0, stepYMult: 3.1, startX: 120, endX: 910, label: "WHOLE PAPER", count: 1, qrSize: 220 };
+    }
+
+    const questions = allQ.slice(0, 60);
+    document.getElementById('totalBadge').textContent = questions.length + "/60";
+
+    const area = document.getElementById('printArea');
+    area.className = 'mode-' + mode + ' ' + paperKey; area.innerHTML = '';
+    const cfg = SIZES[paperKey];
+
+    for (let i = 0; i < modeCfg.count; i++) {
+      const nameVal = isQuarter ? document.getElementById(`quarterName${i + 1}`).value : wholeName;
+      const sectionVal = isQuarter ? document.getElementById(`quarterSection${i + 1}`).value : wholeSection;
+      const temp = document.getElementById('sheetTemplate').content.cloneNode(true);
+      const svg = temp.querySelector('svg');
+
+      // FIXED: Always use the full portrait ratio of the paper size
+      // The CSS grid will handle the "quartering" on the screen/print
+      let finalH = cfg.h;
+      // Keep a fixed clear zone above the bottom anchor markers.  Bubble
+      // rows must never be allowed to touch a scanner anchor.
+      const maxY = finalH - (isQuarter ? 120 : modeCfg.maxYGap);
+
+      svg.setAttribute('viewBox', `0 0 1000 ${finalH}`);
+      svg.querySelector('.border-rect').setAttribute('height', finalH-30);
+      svg.querySelector('.bl').setAttribute('y', finalH-85); svg.querySelector('.br').setAttribute('y', finalH-85);
+
+      const tTag = svg.querySelector('.t-tag');
+      tTag.textContent = "TESTSYNC - " + modeCfg.label;
+      tTag.setAttribute('y', 85 + modeCfg.dyHeader);
+
+      const tName = svg.querySelector('.t-name');
+      tName.textContent = "NAME: " + nameVal.toUpperCase();
+      const nameX = 120;
+      const sectX = 120;
+      tName.setAttribute('x', nameX); tName.setAttribute('y', 150 + modeCfg.dyHeader);
+      tName.setAttribute('font-size', nameFontSize);
+
+      const tSect = svg.querySelector('.t-section');
+      tSect.textContent = "SECTION: " + sectionVal.toUpperCase();
+      tSect.setAttribute('x', sectX); tSect.setAttribute('y', 205 + modeCfg.dyHeader);
+      tSect.setAttribute('font-size', sectFontSize);
+
+      const instruction1 = svg.querySelector('.t-instruction-1');
+      const instruction2 = svg.querySelector('.t-instruction-2');
+      instruction1.setAttribute('y', 245 + modeCfg.dyHeader);
+      instruction2.setAttribute('y', 268 + modeCfg.dyHeader);
+      instruction1.setAttribute('font-size', 20);
+      instruction2.setAttribute('font-size', 20);
+      const warning = svg.querySelector('.t-warning');
+      warning.setAttribute('y', 302 + modeCfg.dyHeader);
+      warning.setAttribute('font-size', 20);
+      const warningBaseline = Number(warning.getAttribute('y'));
+      svg.querySelector('.t-warning-marker').setAttribute('cy', warningBaseline - 6.3);
+      svg.querySelector('.t-warning-2').setAttribute('font-size', 20);
+
+      const hLineY = 280 + modeCfg.dyHeader;
+      const hLine = svg.querySelector('line');
+      hLine.setAttribute('y1', hLineY); hLine.setAttribute('y2', hLineY);
+
+      const qImg = svg.querySelector('.q-img');
+      const qrX = mode === 'quarter' ? 695 : 680;
+      const qrY = mode === 'quarter' ? 45 : 45;
+      const qrSize = mode === 'quarter' ? 215 : 220;
+      qImg.setAttribute('x', qrX);
+      qImg.setAttribute('y', qrY);
+      qImg.setAttribute('width', qrSize);
+      qImg.setAttribute('height', qrSize);
+
+      const grid = svg.querySelector('.b-grid');
+
+      let stepY = Math.max(30, bubbleRadius * 2.8);
+      if (mode === 'quarter') stepY = 34.3;
+
+      const totalCols = Math.ceil(questions.length / modeCfg.itemsPerCol);
+      const bubbleGap = mode === 'quarter' ? 32.0 : ((totalCols > 4) ? bubbleRadius * 2.2 : bubbleRadius * 2.8);
+      const rowWidthEstimate = (bubbleRadius * 2.8) + (4 * bubbleGap) + 30;
+      let colWidth = mode === 'quarter' ? 201.0 : rowWidthEstimate + 15;
+      if (totalCols === 1) colWidth = 0;
+
+      let currentCol = 0; let currentRow = 0; let lastTypeOverall = null;
+
+      questions.forEach((choices, index) => {
+        const currentType = choices.join('');
+        const isNewSection = currentType !== lastTypeOverall;
+
+        if (currentRow >= modeCfg.itemsPerCol) {
+          currentCol++; currentRow = 0; lastTypeOverall = null;
+        }
+
+        let currentY = modeCfg.startY + (currentRow * stepY);
+        if (currentY + bubbleRadius > maxY) {
+          currentCol++; currentRow = 0; lastTypeOverall = null;
+          currentY = modeCfg.startY + (currentRow * stepY);
+        }
+
+        const x = modeCfg.startX + (currentCol * colWidth);
+        const sectionNeedsHeader = isNewSection || currentRow === 0;
+
+        if (sectionNeedsHeader) {
+          choices.forEach((l, idx) => {
+            const cx = x + (bubbleRadius * 3.5) + (idx * bubbleGap);
+            const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            lbl.setAttribute("x", cx); lbl.setAttribute("y", currentY - (bubbleRadius * 1.0));
+            lbl.setAttribute("text-anchor", "middle"); lbl.setAttribute("font-size", "11");
+            lbl.setAttribute("font-weight", "bold"); lbl.textContent = l;
+            grid.appendChild(lbl);
+          });
+          lastTypeOverall = currentType;
+          currentRow += 0.2;
+          currentY = modeCfg.startY + (currentRow * stepY);
+        }
+
+        const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        txt.setAttribute("x", x); txt.setAttribute("y", currentY + 6);
+        txt.setAttribute("font-size", questionNumberSize); txt.setAttribute("font-weight", "bold");
+        txt.textContent = (startNum + index) + ".";
+        grid.appendChild(txt);
+
+        choices.forEach((l, idx) => {
+          const cx = x + (bubbleRadius * 3.5) + (idx * bubbleGap);
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("cx", cx); circle.setAttribute("cy", currentY); circle.setAttribute("r", bubbleRadius);
+          circle.setAttribute("fill", "none"); circle.setAttribute("stroke", "#000"); circle.setAttribute("stroke-width", "2");
+          grid.appendChild(circle);
+        });
+        currentRow++;
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      const quizId = params.get("quizId");
+
+      console.log("=== TESTSYNC QR DEBUG ===");
+      console.log("Current URL:", window.location.href);
+      console.log("Quiz ID:", quizId);
+      console.log("=========================");
+      const qrData = { app: "TestSync", quizId: quizId, name: nameVal, section: sectionVal, items: questions.length, paper: (mode === 'quarter' ? 'quarter-' : '') + paperKey };
+      generateQrDataUrl(qrData)
+        .then((url) => qImg.setAttribute('href', url))
+        .catch(() => {
+          qImg.setAttribute('href', 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><rect width="180" height="180" fill="#fff"/><text x="90" y="95" text-anchor="middle" font-size="12" fill="#800000">QR UNAVAILABLE</text></svg>'));
+        });
+      area.appendChild(svg);
+    }
+  }
+
+  function changePaperSize(value) {
+    if (!['short', 'long', 'a4'].includes(value)) return;
+    // Keep the selected size visible in the URL and make the change immediate.
+    const url = new URL(window.location.href);
+    url.searchParams.set('paper', value);
+    window.history.replaceState({}, '', url);
+    render();
+  }
+
+  function render(changedInput) {
+    normalizeItemCounts(changedInput);
+    const params = new URLSearchParams(window.location.search);
+    let students = [];
+    try { students = JSON.parse(params.get('students') || '[]'); } catch {}
+    if (!Array.isArray(students) || students.length <= 4) {
+      renderSingle();
+      return;
+    }
+
+    const area = document.getElementById('printArea');
+    const saved = [];
+    for (let start = 0; start < students.length; start += 4) {
+      const pageStudents = students.slice(start, start + 4);
+      for (let i = 1; i <= 4; i++) {
+        const student = pageStudents[i - 1] || {};
+        document.getElementById(`quarterName${i}`).value = student.name || '';
+        document.getElementById(`quarterSection${i}`).value = student.section || '';
+      }
+      renderSingle();
+      const page = document.createElement('div');
+      page.className = 'print-page';
+      Array.from(area.children).forEach(svg => page.appendChild(svg.cloneNode(true)));
+      saved.push(page);
+    }
+    area.innerHTML = '';
+    area.classList.add('multi-page');
+    saved.forEach(page => area.appendChild(page));
+  }
+  window.onload = function () {
+    // Keep the selected bond-paper size part of the print URL as well as the QR
+    // payload, so a reopened/shared sheet uses the same physical page size.
+    const paperParam = new URLSearchParams(window.location.search).get('paper');
+    const paperSelect = document.getElementById('paperSize');
+    if (paperSelect && ['short', 'long', 'a4'].includes(paperParam)) {
+      paperSelect.value = paperParam;
+    }
+    render();
+  };
+</script>
+</body>
+</html>
